@@ -37,6 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'users',
+    'data_management',
+    'personalization',
 ]
 
 MIDDLEWARE = [
@@ -79,9 +83,21 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'doprava_db',
         'USER': 'root',
-        'PASSWORD': 'dalibor_je_fesak',
+        #'PASSWORD': 'dalibor_je_fesak',
         'HOST': 'localhost',
         'PORT': '3306',
+
+        'OPTIONS': {
+            'init_command': "SET default_storage_engine=InnoDB",
+            # Presúvame to sem, kde to má Django spracovať!
+            #'init_db': 'SET foreign_key_checks=0;', # Pridajte túto bežnú MySQL možnosť
+            #'custom_ignore_mysql_version': True,
+
+            #'init_command': "SET default_storage_engine=InnoDB",
+            #'ignore_mysql_version': True, # Toto obíde kontrolu verzie!
+        },
+
+        #'ignore_mysql_version': True,
     }
 }
 
@@ -126,3 +142,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'users.CustomUser'
