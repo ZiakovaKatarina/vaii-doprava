@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Zoznam zastávok</h2>
+
+    <a href="{% url 'stop_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
+        + Pridať zastávku
+    </a>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Názov</th>
+                <th>GPS Šírka</th>
+                <th>GPS Dĺžka</th>
+                <th>Akcie</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stop in stops %}
+            <tr>
+                <td>{{ stop.name }}</td>
+                <td>{{ stop.latitude }}</td>
+                <td>{{ stop.longitude }}</td>
+                <td class="flex">
+                    <a class="btn btn-outline" href="{% url 'stop_update' stop.id %}">Upraviť</a>
+                    <a class="btn btn-outline" href="{% url 'stop_delete' stop.id %}">Zmazať</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

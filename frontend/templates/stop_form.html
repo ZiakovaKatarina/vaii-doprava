@@ -1,0 +1,96 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>{{ title }}</h2>
+
+    <form method="POST" id="stop-form" novalidate>
+        {% csrf_token %}
+
+        {% for field in form %}
+            <div class="form-row" style="margin-bottom: 1rem;">
+                <label>{{ field.label }}</label>
+                {{ field }}
+                <div class="alert alert-error" style="display:none; color:red; font-size:0.9rem;"></div>
+                {% if field.errors %}
+                    <div class="alert alert-error" style="color:red; font-size:0.9rem;">{{ field.errors.0 }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button class="btn btn-primary" type="submit">Uložiť</button>
+        <a class="btn btn-outline" href="{% url 'stop_list' %}">Späť</a>
+    </form>
+</div>
+
+<!-- CLIENT-SIDE VALIDATION JS -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('stop-form');
+    const lat = document.querySelector('input[name="latitude"]');
+    const lon = document.querySelector('input[name="longitude"]');
+    const name = document.querySelector('input[name="name"]');
+
+    // Získanie alert elementu pod polom
+    function getAlert(input) {
+        return input.parentElement.querySelector('.alert');
+    }
+
+    // Funkcia pre range validáciu
+    function validateRange(input, min, max) {
+        input.addEventListener('input', () => {
+            const alertBox = getAlert(input);
+            const value = parseFloat(input.value);
+            if (isNaN(value)) {
+                input.setCustomValidity("Toto pole je povinné a musí byť číslo.");
+                alertBox.style.display = "block";
+                alertBox.textContent = input.validationMessage;
+            } else if (value < min || value > max) {
+                input.setCustomValidity(`Hodnota musí byť medzi ${min} a ${max}.`);
+                alertBox.style.display = "block";
+                alertBox.textContent = input.validationMessage;
+            } else {
+                input.setCustomValidity('');
+                alertBox.style.display = "none";
+            }
+        });
+    }
+
+    // Range validácia
+    validateRange(lat, -90, 90);
+    validateRange(lon, -180, 180);
+
+    // Kontrola required pre názov
+    name.addEventListener('input', () => {
+        const alertBox = getAlert(name);
+        const nameValue = name.value.trim();
+        const regex = /^(?=.*[a-zA-Z])[a-zA-Z0-9 ]{5,}$/;
+
+        if (nameValue === "") {
+            name.setCustomValidity("Názov je povinný.");
+        } else if (nameValue.length < 5) {
+            name.setCustomValidity("Názov musí mať aspoň 5 znakov.");
+        } else if (!regex.test(nameValue)) {
+            name.setCustomValidity("Názov musí obsahovať len písmená, číslice a medzery a aspoň jedno písmeno.");
+        } else {
+            name.setCustomValidity('');
+        }
+
+        if (name.validationMessage) {
+            alertBox.style.display = "block";
+            alertBox.textContent = name.validationMessage;
+        } else {
+            alertBox.style.display = "none";
+        }
+    });
+
+    // Zabránime odoslaniu, ak sú chyby
+    form.addEventListener('submit', (e) => {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            form.reportValidity(); // štandardný browser alert
+        }
+    });
+});
+</script>
+{% endblock %}
