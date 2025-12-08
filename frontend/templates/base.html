@@ -13,10 +13,11 @@
     <header>
         <div class="container">
             <h1>Verejná Doprava</h1>
-                <nav>
-    <a href="/">Mapa/Hľadanie Trasy</a>
-    <a href="/admin/">Správa dát (Admin)</a>
-</nav>
+            <nav>
+                <a href="{% url 'home' %}">Mapa/Hľadanie Trasy</a>
+                <a href="{% url 'stop_list' %}">Zastávky (Stops)</a>
+                <a href="/admin/">Správa dát (Admin)</a>
+            </nav>
         </div>
     </header>
 
