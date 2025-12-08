@@ -1,6 +1,4 @@
 /* --- style.css --- */
-/* Kombinácia tvojich pravidiel + doplnené layout + komponenty */
-
 /* 1. Global Reset pre box model (Vlastné pravidlo) */
 * {
     box-sizing: border-box;
@@ -173,19 +171,61 @@ input:focus, textarea:focus, select:focus {
 .mobile-only { display: none; }
 
 /* 15. Responsive: pre menšie obrazovky zmeny */
-@media (max-width: 1200px) {
-    /*main.container { grid-template-columns: 1fr; padding: 0 1rem; }*/
-    main.container { grid-template-columns: 1fr; }
-    nav { gap: 0.3rem; }
-    header .top { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+@media (max-width: 1199px) {
+    main.container {
+        grid-template-columns: 1fr minmax(250px, 300px);
+        gap: 1.2rem;
+    }
 }
 
-/* 16. Responsive: pre telefony */
-@media (max-width: 768px) {
-    body { font-size: 95%; } /* mierne zmenšenie textu */
+/* tablet: jednokolónkový layout */
+@media (max-width: 991px) {
+    main.container {
+        grid-template-columns: 1fr;
+    }
+    header .top {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    nav {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+/* telefón */
+@media (max-width: 767px) {
+    .container {
+        width: 95%;
+        padding: 0 0.5rem;
+    }
+
+    nav {
+        flex-direction: column;
+        width: 100%;
+    }
+    nav a {
+        width: 100%;
+        text-align: center;
+        padding: 0.75rem;
+    }
+
+    /* Responsive tabuľka – horizontálny scroll */
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .btn, .btn-primary, .btn-outline {
+        width: 100%;
+        padding: 0.75rem;
+    }
+
+    h1 { font-size: 1.8rem; }
+    h2 { font-size: 1.5rem; }
+
     .mobile-only { display: block; }
-    nav a { padding: 0.35rem 0.6rem; font-size: 0.95rem; }
-    .btn { padding: 0.45rem 0.8rem; }
+    .desktop-only { display: none; }
 }
 
 /* 17. Notifikácie / chyby */
