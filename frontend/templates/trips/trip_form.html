@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>{{ title }}</h2>
+
+    <form method="POST" id="trip-form" novalidate>
+        {% csrf_token %}
+
+        {% for field in form %}
+            <div class="form-row" style="margin-bottom: 1rem;">
+                <label>{{ field.label }}</label>
+                {{ field }}
+                <div class="alert alert-error" style="display:none; color:red; font-size:0.9rem;"></div>
+                {% if field.errors %}
+                    <div class="alert alert-error" style="color:red; font-size:0.9rem;">{{ field.errors.0 }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button class="btn btn-primary" type="submit">Uložiť</button>
+        <a class="btn btn-outline" href="{% url 'trip_list' %}">Späť</a>
+    </form>
+</div>
+
+<!-- CLIENT-SIDE VALIDATION JS -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('trip-form');
+    const departureTimeInput = document.querySelector('input[name="departureTime"]');
+    const arrivalTimeInput = document.querySelector('input[name="arrivalTime"]');
+
+    function getAlert(input) {
+        return input.parentElement.querySelector('.alert');
+    }
+
+    function validateTimeOrder() {
+        const alertBox = getAlert(arrivalTimeInput);
+        
+        const departure = new Date(departureTimeInput.value);
+        const arrival = new Date(arrivalTimeInput.value);
+
+        if (!departureTimeInput.value || !arrivalTimeInput.value) {
+             arrivalTimeInput.setCustomValidity('');
+        }
+        else if (arrival <= departure) {
+            arrivalTimeInput.setCustomValidity("Čas príchodu musí byť neskôr ako čas odchodu.");
+            alertBox.style.display = "block";
+            alertBox.textContent = arrivalTimeInput.validationMessage;
+        } else {
+            arrivalTimeInput.setCustomValidity('');
+            alertBox.style.display = "none";
+        }
+    }
+
+    if (departureTimeInput && arrivalTimeInput) {
+        departureTimeInput.addEventListener('change', validateTimeOrder);
+        arrivalTimeInput.addEventListener('change', validateTimeOrder);
+    }
+    
+    form.addEventListener('submit', (e) => {
+        validateTimeOrder();
+
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            form.reportValidity();
+        }
+    });
+});
+</script>
+{% endblock %}

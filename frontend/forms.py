@@ -1,6 +1,62 @@
 from django import forms
-from data_management.models import Stop
+from data_management.models import Stop, Trip, Route
 from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
+
+class RouteForm(forms.ModelForm):
+    class Meta:
+        model = Route
+        fields = ['name', 'type']
+        
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-input', 'required': True}),
+            'type': forms.Select(attrs={'class': 'form-input', 'required': True}),
+        }
+
+class TripForm(forms.ModelForm):
+    class Meta:
+        model = Trip
+        fields = ['routeID', 'startStopID', 'endStopID', 'departureTime', 'arrivalTime']
+        widgets = {
+            'routeID': forms.Select(attrs={'class': 'form-input', 'required': True}), 
+            'startStopID': forms.Select(attrs={'class': 'form-input', 'required': True}),
+            'endStopID': forms.Select(attrs={'class': 'form-input', 'required': True}),
+
+            #'routeID': forms.Select(attrs={'class': 'form-input'}),
+            #'routeID': forms.TextInput(attrs={'class': 'form-input', 'required': True}),
+
+            #'startStopID': autocomplete.ModelSelect2(
+            #    url='stop-autocomplete', 
+            #    attrs={'class': 'form-input'}
+            #),
+            #'startStopID': forms.TextInput(attrs={'class': 'form-input', 'required': True}),
+
+            #'endStopID': autocomplete.ModelSelect2(
+            #    url='stop-autocomplete', 
+            #    attrs={'class': 'form-input'}
+            #),
+            #'endStopID': forms.TextInput(attrs={'class': 'form-input', 'required': True}),
+
+            'departureTime': forms.DateTimeInput(attrs={'class': 'form-input', 'type': 'datetime-local'},format='%Y-%m-%dT%H:%M',),
+            'arrivalTime': forms.DateTimeInput(attrs={'class': 'form-input', 'type': 'datetime-local'},format='%Y-%m-%dT%H:%M',),
+
+        }
+
+    # SERVER-SIDE VALIDATION
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        departure_time = cleaned_data.get("departureTime")
+        arrival_time = cleaned_data.get("arrivalTime")
+
+        if departure_time and arrival_time:
+            if arrival_time <= departure_time:
+                raise ValidationError(
+                    "Čas príchodu musí byť neskôr ako čas odchodu.",
+                    code='invalid_time_order'
+                )
+
+        return cleaned_data
 
 class StopForm(forms.ModelForm):
     class Meta:

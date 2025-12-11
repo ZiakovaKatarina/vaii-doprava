@@ -5,36 +5,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Verejná Doprava{% endblock %}</title>
-    
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+   <!-- <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">-->
+    <!--
+    <style>
+        
+.dropdown {
+  position: relative;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 130px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  padding: 18px 16px;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+    </style>-->
 </head>
 <body>
-    
+
     <header>
         <div class="container">
             <h1>Verejná Doprava</h1>
             <nav>
                 <a href="{% url 'home' %}">Hľadanie Trasy</a>
-                <a href="{% url 'stop_list' %}">Zastávky (Stops)</a>
-                <a href="/admin/">Správa dát (Admin)</a>
+
+                <div class="dropdown">
+                    <span class="nav-link">Data</span>
+                    <div class="dropdown-content">
+                        <a style="color: black;" href="{% url 'stop_list' %}">Zastávky</a>
+                        <a style="color: black;" href="{% url 'trip_list' %}">Spoje</a>
+                        <a style="color: black;" href="{% url 'route_list' %}">Linky</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <span class="nav-link">Aministrativa</span>
+                    <div class="dropdown-content">
+                        <a style="color: black;" href="/admin/">Admin</a>
+                    </div>
+                </div>
             </nav>
         </div>
     </header>
 
     <main class="container">
         {% block content %}
-            {% endblock %}
+        {% endblock %}
     </main>
 
     <footer>
-        <div class="container">
-            <p>2025 VAII - Semestrálna práca</p>
+        <div class="container text-center">
+            <p>© 2025 VAII – Semestrálna práca</p>
             <p>Katarína Žiaková</p>
         </div>
     </footer>
-    
-    {% block extra_js %}
-    {% endblock %}
 
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const dropdown = document.getElementById('admin-dropdown');
+    const toggle = document.getElementById('admin-toggle');
+
+    // Pre mobile: toggle triedy .active a aria-expanded
+    function toggleDropdown() {
+        const isActive = dropdown.classList.toggle('active');
+        dropdown.classList.toggle('open', isActive);
+        toggle.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+    }
+
+    toggle.addEventListener('click', function(e){
+        // vždy sprav toggle (desktop hover zostáva funkčný)
+        toggleDropdown();
+    });
+
+    // zatvorenie klikom mimo
+    document.addEventListener('click', function(e){
+        if (!dropdown.contains(e.target)) {
+            dropdown.classList.remove('active', 'open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    // klávesnica
+    toggle.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleDropdown();
+        } else if (e.key === 'Escape') {
+            dropdown.classList.remove('active','open');
+            toggle.setAttribute('aria-expanded','false');
+            toggle.focus();
+        }
+    });
+});
+</script>
+
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

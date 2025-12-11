@@ -19,8 +19,6 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls), # Admin
-    path('', include('frontend.urls')), # HLAVNÁ STRÁNKA
-    # ZAKOMENTUJEME /data/ na dočasné vylúčenie chyby v data_management views
-    # path('data/', include('data_management.urls')), 
+    path('admin/', admin.site.urls),
+    path('', include('frontend.urls')),
 ]

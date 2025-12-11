@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card center">
+    <h2>Zmazať linku</h2>
+    <p>Skutočne chceš zmazať <strong>{{ stop.name }}</strong>?</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Áno, zmazať</button>
+        <a href="{% url 'stop_list' %}" class="btn btn-outline">Nie, späť</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Potvrdenie zmazania Linky</h2>
+    
+    <p>Naozaj chcete zmazať túto linku?</p>
+    
+    <div class="alert alert-error" style="font-weight: bold;">
+        Bude zmazaná linka: {{ route.name }} (ID: {{ route.pk }})
+    </div>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary" style="background-color: #dc3545;">Áno, zmazať</button>
+        <a href="{% url 'route_list' %}" class="btn btn-outline">Zrušiť</a>
+    </form>
+</div>
+{% endblock %}

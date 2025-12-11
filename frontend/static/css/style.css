@@ -1,240 +1,350 @@
-/* --- style.css --- */
-/* 1. Global Reset pre box model (Vlastné pravidlo) */
-* {
+/* ==================================================================
+   VEREJNA DOPRAVA – Semestrálna práca 2025
+   Autor: Katarína Žiaková
+   Verzia: 2025-12-11 (kompletne preorganizovaná a opravená)
+   ================================================================== */
+
+/* 1. GLOBAL RESET & BOX-SIZING */
+*, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-/* 2. CSS premenné (Vlastné pravidlo) */
+/* 2. CSS PREMENNÉ */
 :root {
-    --primary-color: #007bff;
-    --accent-color: #ff6b6b;
-    --bg: #f4f4f9;
-    --text: #333;
-    --muted: #666;
-    --max-width: 1200px;
-    --radius: 10px;
-    --font-family: 'Arial', sans-serif;
-    --space-1: 0.5rem;
-    --space-2: 1rem;
-    --space-3: 1.5rem;
+    --primary-color:    #007bff;
+    --primary-dark:     #0056b3;
+    --accent-color:     #ff6b6b;
+    --bg:               #f8f9fc;
+    --text:             #333;
+    --muted:            #666;
+    --light:            #f1f3f5;
+    --border-radius:    10px;
+    --radius-sm:        8px;
+    --max-width:        1200px;
+    --font-family:      'Segoe UI', Arial, sans-serif;
+    --shadow-sm:        0 6px 18px rgba(20,20,50,0.06);
+    --shadow-md:        0 10px 25px rgba(0,0,0,0.12);
 }
 
+/* 3. ZÁKLADNÁ TYPOGRAFIA */
+body {
+    font-family: var(--font-family);
+    line-height: 1.6;
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* 4. ODKAZY */
 a {
     color: var(--primary-color);
+    text-decoration: none;
     transition: color 150ms ease;
 }
 a:hover {
     color: var(--primary-dark);
 }
 
-/* 3. Telo a základné písmo (Vlastné pravidlo) */
-body {
-    font-family: var(--font-family);
-    line-height: 1.6;
-    background-color: var(--bg);
-    color: var(--text);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-/* 4. Kontajner (Vlastné pravidlo) */
+/* 5. KONTAJNER */
 .container {
-    width: 90%;
+    width: 92%;
     max-width: var(--max-width);
     margin: 0 auto;
 }
 
-/* 5. Header + nav (Vlastné pravidlo) */
+/* 6. HEADER */
 header {
-    background-color: var(--primary-color);
+    background: var(--primary-color);
     color: white;
     padding: 1rem 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
-header .top {
+header .container {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 1rem;
 }
 header h1 {
-    font-size: 1.5rem;
+    font-size: 1.7rem;
     margin: 0;
+    font-weight: 600;
 }
 
-/* 6. Navigácia (Vlastné pravidlo) */
+/* 7. NAVIGÁCIA – ZÁKLAD */
 nav {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
 }
-nav a {
+nav > a,
+nav .nav-link {
     color: white;
-    text-decoration: none;
-    padding: 0.4rem 0.8rem;
     font-weight: 600;
-    border-radius: 6px;
-    transition: background 150ms ease;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    transition: background 200ms ease;
+    white-space: nowrap;
+    cursor: pointer;
 }
-nav a:hover { background: rgba(255,255,255,0.12); }
+nav > a:hover,
+nav .nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
 
-/* 7. Layout hlavnej časti: grid s content + sidebar (Vlastné pravidlo) */
+/* 8. DROPDOWNY – SPOLOČNÉ */
+.dropdown {
+    position: relative;
+}
+.nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.arrow {
+    font-size: 0.8em;
+    transition: transform 200ms ease;
+}
+.dropdown.active .arrow {
+    transform: rotate(180deg);
+}
+
+.nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: white;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    transition: background 200ms ease;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.arrow {
+    font-size: 0.8em;
+    transition: transform 200ms ease;
+}
+.dropdown.active .arrow {
+    transform: rotate(180deg);
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 130px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  padding: 18px 16px;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* 9. DROPDOWN – DESKTOP (hover) */
+@media (min-width: 992px) {
+    .dropdown:hover > .dropdown-content {
+        display: block;
+    }
+}
+
+/* 10. DROPDOWN – MOBILE/TABLET (klik) */
+@media (max-width: 991px) {
+    .dropdown-content {
+        position: static;
+        transform: none;
+        margin-top: 0.5rem;
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: none;
+        border-radius: var(--radius-sm);
+        display: none;                     /* defaultne skryté */
+    }
+    .dropdown.active > .dropdown-content {
+        display: block;
+    }
+    .dropdown-content a {
+        color: white !important;
+        text-align: center;
+    }
+    .dropdown-content a:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* 11. HLAVNÝ OBSAH */
 main.container {
-    display: grid;
-    grid-template-columns: 1fr minmax(250px, 320px);
-    gap: 1.5rem;
-    margin: 2rem auto;
-    align-items: start;
+    flex: 1;
+    padding: 2rem 0;
 }
 
-/* 8. Card komponent (Vlastné pravidlo) */
+/* 12. CARD */
 .card {
     background: white;
-    border-radius: var(--radius);
-    box-shadow: 0 6px 18px rgba(20,20,50,0.06);
-    padding: 1rem;
-    overflow: hidden;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
-/* 9. Footer (Vlastné pravidlo) */
-footer {
-    margin-top: auto;
-    background: #0f1724;
-    color: #d1d5db;
-    padding: 1rem 0;
-    font-size: 0.9rem;
-}
-
-/* 10. Tlačidlá (Vlastné pravidlo) */
+/* 13. TLAČIDLÁ */
 .btn {
     display: inline-block;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
+    padding: 0.65rem 1.3rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
     cursor: pointer;
     border: none;
-    font-weight: 600;
+    text-align: center;
+    transition: all 200ms;
 }
 .btn-primary {
-    background-color: var(--primary-color);
+    background: var(--primary-color);
     color: white;
+}
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
 }
 .btn-outline {
     background: transparent;
     border: 2px solid var(--primary-color);
     color: var(--primary-color);
 }
+.btn-outline:hover {
+    background: var(--primary-color);
+    color: white;
+}
 
-/* 11. Formuláre a polia (Vlastné pravidlo) */
-.form-row { margin-bottom: 0.75rem; }
-label { display: block; margin-bottom: 0.4rem; color: var(--muted); font-size: 0.95rem; }
-input[type="text"], input[type="number"], textarea, select {
-    width: 100%;
-    padding: 0.6rem 0.75rem;
-    border-radius: 8px;
-    border: 1px solid #e6e9ef;
+/* 14. FORMULÁRE */
+.form-row {
+    margin-bottom: 1rem;
+}
+label {
+    display: block;
+    margin-bottom: 0.4rem;
+    color: var(--muted);
     font-size: 0.95rem;
-    background: #fff;
 }
-input:focus, textarea:focus, select:focus {
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    transition: border-color 200ms;
+}
+input:focus,
+textarea:focus,
+select:focus {
     outline: none;
-    border-color: rgba(0,123,255,0.6);
-    box-shadow: 0 4px 12px rgba(0,123,255,0.06);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
 }
 
-/* 12. Table listing pre CRUD (Vlastné pravidlo) */
+/* 15. TABUĽKA */
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+}
 .table {
     width: 100%;
     border-collapse: collapse;
     background: white;
-    border-radius: 8px;
-    overflow: hidden;
 }
-.table th, .table td {
-    padding: 0.75rem 1rem;
+.table th,
+.table td {
+    padding: 0.9rem 1rem;
     text-align: left;
-    border-bottom: 1px solid #f1f3f5;
+    border-bottom: 1px solid #eee;
 }
-.table th { background: #fafcff; font-weight: 700; }
-
-/* 13. Small utilities (Vlastné pravidlo) */
-.text-muted { color: var(--muted); font-size: 0.9rem; }
-.center { text-align: center; }
-.flex { display: flex; gap: 0.5rem; align-items: center; }
-
-/* 14. Mobile-only (Vlastné pravidlo) */
-.mobile-only { display: none; }
-
-/* 15. Responsive: pre menšie obrazovky zmeny */
-@media (max-width: 1199px) {
-    main.container {
-        grid-template-columns: 1fr minmax(250px, 300px);
-        gap: 1.2rem;
-    }
+.table th {
+    background: #f8f9fc;
+    font-weight: 600;
+    color: var(--text);
+}
+.table tr:hover {
+    background: #f8f9fc;
 }
 
-/* tablet: jednokolónkový layout */
+/* 16. NOTIFIKÁCIE */
+.alert {
+    padding: 0.9rem 1.2rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+.alert-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* 17. FOOTER */
+footer {
+    background: #1a1f2e;
+    color: #adb5bd;
+    padding: 1.5rem 0;
+    font-size: 0.95rem;
+    margin-top: auto;
+}
+footer p {
+    margin: 0.3rem 0;
+}
+
+/* 18. UTILITY KLASY */
+.text-muted   { color: var(--muted); font-size: 0.9rem; }
+.text-center  { text-align: center; }
+.mb-2         { margin-bottom: 1rem; }
+
+/* 19. RESPONSIVE – TABLET */
 @media (max-width: 991px) {
-    main.container {
-        grid-template-columns: 1fr;
-    }
-    header .top {
+    header .container {
         flex-direction: column;
-        align-items: stretch;
+        text-align: center;
     }
     nav {
+        width: 100%;
         justify-content: center;
-        flex-wrap: wrap;
+        margin-top: 0.5rem;
     }
 }
 
-/* telefón */
-@media (max-width: 767px) {
+/* 20. RESPONSIVE – MOBIL */
+@media (max-width: 576px) {
+    header h1 {
+        font-size: 1.5rem;
+    }
+    .btn {
+        width: 100%;
+        padding: 0.9rem;
+    }
     .container {
         width: 95%;
-        padding: 0 0.5rem;
     }
-
-    nav {
-        flex-direction: column;
-        width: 100%;
-    }
-    nav a {
-        width: 100%;
-        text-align: center;
-        padding: 0.75rem;
-    }
-
-    /* Responsive tabuľka – horizontálny scroll */
-    .table-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .btn, .btn-primary, .btn-outline {
-        width: 100%;
-        padding: 0.75rem;
-    }
-
-    h1 { font-size: 1.8rem; }
-    h2 { font-size: 1.5rem; }
-
-    .mobile-only { display: block; }
-    .desktop-only { display: none; }
 }
-
-/* 17. Notifikácie / chyby */
-.alert { padding: 0.6rem 0.8rem; border-radius: 8px; margin-bottom: 0.75rem; }
-.alert-error { background: #fff1f0; color: #9b1c1c; border: 1px solid #ffd6d6; }
-.alert-success { background: #f0fff4; color: #0f5132; border: 1px solid #c7f5d6; }
-
-/* 18. Tiny helper: character counter */
-.char-counter { font-size: 0.85rem; color: var(--muted); text-align: right; }
-
-/* 19. Accessible focus ring for keyboard users */
-:focus { outline: 3px solid rgba(0,123,255,0.12); outline-offset: 2px; }
