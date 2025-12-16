@@ -1,7 +1,34 @@
 from django import forms
-from data_management.models import Stop, Trip, Route
+from data_management.models import Stop, Trip, Route, Vehicle
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
+
+class VehicleForm(forms.ModelForm):
+    class Meta:
+        model = Vehicle
+        fields = ['registration_number', 'model_name', 'capacity']
+        
+        widgets = {
+            'registration_number': forms.TextInput(attrs={
+                'class': 'form-input', 
+                'placeholder': 'napr. ZA-123AB',
+                'required': True
+            }),
+            'model_name': forms.TextInput(attrs={
+                'class': 'form-input', 
+                'placeholder': 'napr. Solaris Urbino 12',
+                'required': True
+            }),
+            'capacity': forms.NumberInput(attrs={
+                'class': 'form-input', 
+                'min': '1',
+                'required': True
+            }),
+        }
+
+    def clean_registration_number(self):
+        registration_number = self.cleaned_data.get('registration_number')
+        return registration_number.upper()
 
 class RouteForm(forms.ModelForm):
     class Meta:
@@ -16,9 +43,10 @@ class RouteForm(forms.ModelForm):
 class TripForm(forms.ModelForm):
     class Meta:
         model = Trip
-        fields = ['routeID', 'startStopID', 'endStopID', 'departureTime', 'arrivalTime']
+        fields = ['routeID', 'vehicleID', 'startStopID', 'endStopID', 'departureTime', 'arrivalTime']
         widgets = {
             'routeID': forms.Select(attrs={'class': 'form-input', 'required': True}), 
+            'vehicleID': forms.Select(attrs={'class': 'form-input',  'required': False}),
             'startStopID': forms.Select(attrs={'class': 'form-input', 'required': True}),
             'endStopID': forms.Select(attrs={'class': 'form-input', 'required': True}),
 

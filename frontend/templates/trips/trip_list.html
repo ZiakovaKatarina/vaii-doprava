@@ -8,34 +8,40 @@
     </a>
 
     <div class="table-wrapper">
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th>routeID</th>
-                <th>startStopID</th>
-                <th>endStopID</th>
-                <th>departureTime</th>
-                <th>arrivalTime</th>
-                <th>Akcie</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for trip in trips %}
-            <tr>
-                <td>{{ trip.routeID }}</td>
-                <td>{{ trip.startStopID }}</td>
-                <td>{{ trip.endStopID }}</td>
-                <td>{{ trip.departureTime }}</td>
-                <td>{{ trip.arrivalTime }}</td>
-                <td class="flex">
-                    <a class="btn btn-outline" href="{% url 'trip_update' trip.id %}">Upraviť</a>
-                    <a class="btn btn-outline" href="{% url 'trip_delete' trip.id %}">Zmazať</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Linka</th>
+                    <th>Vozidlo</th> <th>Zastávka (odchod)</th>
+                    <th>Zastávka (príchod)</th>
+                    <th>Čas odchodu</th>
+                    <th>Čas príchodu</th>
+                    <th>Akcie</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trip in trips %}
+                <tr>
+                    <td>{{ trip.routeID }}</td>
+                    <td>
+                        {% if trip.vehicleID %}
+                            {{ trip.vehicleID }}
+                        {% else %}
+                            <span class="text-muted">Nepriradené</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ trip.startStopID }}</td>
+                    <td>{{ trip.endStopID }}</td>
+                    <td>{{ trip.departureTime|date:"d.m.Y H:i" }}</td>
+                    <td>{{ trip.arrivalTime|date:"d.m.Y H:i" }}</td>
+                    <td class="flex">
+                        <a class="btn btn-outline" href="{% url 'trip_update' trip.id %}">Upraviť</a>
+                        <a class="btn btn-outline" href="{% url 'trip_delete' trip.id %}">Zmazať</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

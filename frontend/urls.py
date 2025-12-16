@@ -19,4 +19,13 @@ urlpatterns = [
     path('routes/create/', views.route_create, name='route_create'),
     path('routes/<int:pk>/edit/', views.route_update, name='route_update'),
     path('routes/<int:pk>/delete/', views.route_delete, name='route_delete'),
+
+    path('files/', views.file_upload, name='file_upload'),
+    path('files/jdf', views.jdf_upload, name='jdf_upload'),
+    path('files/gdtf', views.gdtf_upload, name='gdtf_upload'),
+
+    path('vehicles/', views.vehicle_list, name='vehicle_list'),
+    path('vehicles/create/', views.vehicle_create, name='vehicle_create'),
+    path('vehicles/update/<int:pk>/', views.vehicle_update, name='vehicle_update'),
+    path('vehicles/delete/<int:pk>/', views.vehicle_delete, name='vehicle_delete'),
 ]

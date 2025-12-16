@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card" ><!-- style="max-width: 500px; margin: 0 auto;"-->
+    
+    <h2 style="padding-bottom: 10px;">Vyberte typ súboru na nahratie</h2>
+    
+    <div style="display: flex; gap: 1rem; justify-content: space-around;">
+        
+        <a href="{% url 'jdf_upload' %}" class="btn btn-outline" style="width: 50px; flex-grow: 1; text-decoration: none; text-align: center;">
+            Nahrať JDF
+        </a>
+        
+        <a href="{% url 'gdtf_upload' %}" class="btn btn-outline" style="width: auto; flex-grow: 1; text-decoration: none; text-align: center;">
+            Nahrať GDTF
+        </a>
+    </div>
+        
+        <div style="display: flex; gap: 1rem; justify-content: space-around;">
+            <div>
+                <b>Povinné prílohy pre JDF:</b>
+                <p style="text-indent: 30px;">nejakySubor.txt</p>
+                <p style="text-indent: 30px;">dalsi.txt</p>
+                <b>Voliteľné prílohy pre JDF:</b>
+
+            </div>
+
+            <div>
+                <p>Povinne prilohy pre GDTF</p>
+                <p>Povinne prilohy pre GDTF</p>
+                <p>Povinne prilohy pre GDTF</p>
+                <p>Povinne prilohy pre GDTF</p>
+            </div>
+        </div>
+</div>
+
+{% endblock %}

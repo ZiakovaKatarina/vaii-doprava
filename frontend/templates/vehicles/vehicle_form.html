@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2>{{ title }}</h2>
+
+    <form method="POST" novalidate>
+        {% csrf_token %}
+
+        {% for field in form %}
+            <div class="form-row">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                
+                {% if field.errors %}
+                    <div class="alert alert-error" style="display:block; margin-top: 0.3rem;">
+                        {{ field.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button class="btn btn-primary" type="submit" style="flex: 1;">Uložiť vozidlo</button>
+            <a class="btn btn-outline" href="{% url 'vehicle_list' %}" style="flex: 1; text-align: center;">Späť</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

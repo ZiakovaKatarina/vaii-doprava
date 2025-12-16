@@ -1,9 +1,18 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from data_management.models import Stop, Trip, Route
-from .forms import StopForm, TripForm, RouteForm
+from data_management.models import Stop, Trip, Route, Vehicle
+from .forms import StopForm, TripForm, RouteForm, VehicleForm
 
 def home(request):
     return render(request, 'home.html', {})
+
+def file_upload(request):
+    return render(request, 'files/file_upload.html', {})
+
+def jdf_upload(request):
+    return render(request, 'files/jdf_upload.html', {})
+
+def gdtf_upload(request):
+    return render(request, 'files/gdtf_upload.html', {})
 
 # LIST
 def stop_list(request):
@@ -121,3 +130,49 @@ def route_delete(request, pk):
         return redirect('route_list')
     
     return render(request, 'routes/route_confirm_delete.html', {'route': route})
+
+
+# LIST - Zoznam všetkých vozidiel
+def vehicle_list(request):
+    vehicles = Vehicle.objects.all().order_by('registration_number')
+    return render(request, 'vehicles/vehicle_list.html', {'vehicles': vehicles})
+
+# CREATE - Pridanie nového vozidla
+def vehicle_create(request):
+    if request.method == "POST":
+        form = VehicleForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('vehicle_list')
+    else:
+        form = VehicleForm()
+    
+    return render(request, 'vehicles/vehicle_form.html', {
+        'form': form, 
+        'title': 'Pridať vozidlo'
+    })
+
+# UPDATE - Úprava existujúceho vozidla
+def vehicle_update(request, pk):
+    vehicle = get_object_or_404(Vehicle, pk=pk)
+    if request.method == "POST":
+        form = VehicleForm(request.POST, instance=vehicle)
+        if form.is_valid():
+            form.save()
+            return redirect('vehicle_list')
+    else:
+        form = VehicleForm(instance=vehicle)
+    
+    return render(request, 'vehicles/vehicle_form.html', {
+        'form': form, 
+        'title': 'Upraviť vozidlo'
+    })
+
+# DELETE - Odstránenie vozidla
+def vehicle_delete(request, pk):
+    vehicle = get_object_or_404(Vehicle, pk=pk)
+    if request.method == "POST":
+        vehicle.delete()
+        return redirect('vehicle_list')
+    
+    return render(request, 'vehicles/vehicle_confirm_delete.html', {'vehicle': vehicle})

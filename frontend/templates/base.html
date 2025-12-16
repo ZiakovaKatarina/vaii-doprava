@@ -42,6 +42,7 @@
                         <a style="color: black;" href="{% url 'stop_list' %}">Zastávky</a>
                         <a style="color: black;" href="{% url 'trip_list' %}">Spoje</a>
                         <a style="color: black;" href="{% url 'route_list' %}">Linky</a>
+                        <a style="color: black;" href="{% url 'vehicle_list' %}">Vozidlá</a>
                     </div>
                 </div>
 
@@ -49,6 +50,7 @@
                     <span class="nav-link">Aministrativa</span>
                     <div class="dropdown-content">
                         <a style="color: black;" href="/admin/">Admin</a>
+                        <a style="color: black;" href="{% url 'file_upload' %}">File upload</a>
                     </div>
                 </div>
             </nav>
@@ -62,7 +64,7 @@
 
     <footer>
         <div class="container text-center">
-            <p>© 2025 VAII – Semestrálna práca</p>
+            <p>2025 VAII – Semestrálna práca</p>
             <p>Katarína Žiaková</p>
         </div>
     </footer>
