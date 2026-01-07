@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Úprava profilu - {{ edited_user.username }}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 700px; margin: 50px auto;">
+  <div class="card">
+    <h2>Úprava profilu: {{ edited_user.username }}</h2>
+    
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-row" style="margin-bottom:.8rem;">
+        <label for="id_username">Používateľské meno:</label>
+        {{ form.username }}
+      </div>
+      <div class="form-row" style="margin-bottom:.8rem;">
+        <label for="id_first_name">Meno:</label>
+        {{ form.first_name }}
+      </div>
+      <div class="form-row" style="margin-bottom:.8rem;">
+        <label for="id_last_name">Priezvisko:</label>
+        {{ form.last_name }}
+      </div>
+      <div class="form-row" style="margin-bottom:1rem;">
+        <label for="id_email">Email:</label>
+        {{ form.email }}
+      </div>
+      
+      <div class="form-row" style="margin-bottom:1rem;padding:10px;background:#f9f9f9;border-radius:5px;">
+        <label for="id_is_staff" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          {{ form.is_staff }}
+          <span style="font-weight:600;">Admin práva</span>
+        </label>
+        <small style="display:block;margin-top:5px;color:#666;">Zaškrtnutím dáte používateľovi administrátorské práva</small>
+      </div>
+      
+      <div style="display:flex; gap:.5rem; margin-top: 16px;">
+        <button class="btn btn-primary" type="submit">Uložiť</button>
+        <a class="btn btn-outline" href="{% url 'users:users_list' %}">Späť na zoznam</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.card{background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);padding:30px;}
+</style>
+{% endblock %}

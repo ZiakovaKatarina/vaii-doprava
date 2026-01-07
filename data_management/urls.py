@@ -1,8 +1,8 @@
 from django.urls import path
-                    
-# Pridajte sem views pre Trip a ďalšie...
+from . import views
+
+app_name = 'data_management'
 
 urlpatterns = [
     # CRUD pre Zastávky (Stop)
-    
 ]

@@ -1,34 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card">
-    <h2>Zoznam Liniek</h2>
+    <h2>Zoznam líniek</h2>
 
-    <a href="{% url 'route_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
+    <a href="{% url 'frontend:route_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
         + Pridať linku
     </a>
 
-    <div class="table-wrapper"> 
+    <div class="table-wrapper">
         <table class="table">
             <thead>
                 <tr>
-                    <th>Názov Linky</th>
-                    <th>Typ Dopravy</th>
+                    <th>Číslo linky</th>
+                    <th>Názov</th>
                     <th>Akcie</th>
                 </tr>
             </thead>
             <tbody>
                 {% for route in routes %}
-                <tr>
-                    <td>{{ route.name }}</td>
-                    <td>{{ route.get_type_display }}</td> 
-                    <td class="flex">
-                        <a class="btn btn-outline" href="{% url 'route_update' route.id %}">Upraviť</a>
-                        <a class="btn btn-outline" href="{% url 'route_delete' route.id %}">Zmazať</a>
-                    </td>
-                </tr>
+                    <tr>
+                        <td>{{ route.number }}</td>
+                        <td>{{ route.name }}</td>
+                        <td>
+                            <a href="{% url 'frontend:route_update' route.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
+                            <a href="{% url 'frontend:route_delete' route.pk %}" class="btn btn-sm btn-danger">Zmazať</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">Žiadne linky.</td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
-    </div> 
+    </div>
 </div>
 {% endblock %}

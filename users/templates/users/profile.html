@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Môj profil{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 700px; margin: 50px auto;">
+  <div class="card">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>Môj profil</h2>
+      <div style="display:flex;gap:.5rem;">
+        <span class="role-badge role-registered">
+          {{ user.get_role_display }}
+        </span>
+        {% if user.is_staff or user.is_superuser %}
+          <span class="role-badge role-admin">Admin</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="profile-item">
+        <span class="profile-label">Používateľské meno:</span>
+        <span class="profile-value">{{ user.username }}</span>
+      </div>
+      <div class="profile-item">
+        <span class="profile-label">Meno:</span>
+        <span class="profile-value">{{ user.first_name }}</span>
+      </div>
+      <div class="profile-item">
+        <span class="profile-label">Priezvisko:</span>
+        <span class="profile-value">{{ user.last_name }}</span>
+      </div>
+      <div class="profile-item">
+        <span class="profile-label">Email:</span>
+        <span class="profile-value">{{ user.email }}</span>
+      </div>
+      <div class="profile-item">
+        <span class="profile-label">Člen od:</span>
+        <span class="profile-value">{{ user.date_joined|date:"d.m.Y H:i" }}</span>
+      </div>
+
+      <div style="display:flex; gap:.5rem; margin-top: 16px;">
+        <a class="btn btn-primary" href="{% url 'users:profile_edit' %}">Zmeniť údaje</a>
+        <a class="btn btn-outline" href="{% url 'users:password_change' %}">Zmeniť heslo</a>
+        <a class="btn btn-outline" href="{% url 'frontend:home' %}">Späť</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.card{background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);padding:30px;}
+.card-header{margin-bottom:20px;border-bottom:2px solid #f0f0f0;padding-bottom:12px;}
+.profile-item{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0f0;}
+.profile-item:last-child{border-bottom:none;}
+.profile-label{width:200px;font-weight:600;color:#555;}
+.profile-value{flex:1;color:#333;}
+.role-badge{padding:5px 12px;border-radius:20px;font-size:14px;font-weight:600;}
+.role-admin{background:#dc3545;color:#fff;}
+.role-registered{background:#28a745;color:#fff;}
+</style>
+{% endblock %}

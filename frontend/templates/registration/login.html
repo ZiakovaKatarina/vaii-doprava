@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card" style="max-width: 400px; margin: 2rem auto;">
+    <h2 class="center">Prihlásenie</h2>
+    
+    {% if form.errors %}
+        <div class="alert alert-error">
+            Nesprávne meno alebo heslo. Skúste znova.
+        </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        <div class="form-row">
+            <label for="id_username">Používateľské meno:</label>
+            <input type="text" name="username" id="id_username" class="form-input" required>
+        </div>
+        <div class="form-row" style="margin-top: 1rem;">
+            <label for="id_password">Heslo:</label>
+            <input type="password" name="password" id="id_password" class="form-input" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">
+            Prihlásiť sa
+        </button>
+    </form>
+</div>
+{% endblock %}

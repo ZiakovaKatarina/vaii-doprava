@@ -7,7 +7,7 @@
     <form method="POST">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary">Áno, zmazať</button>
-        <a href="{% url 'stop_list' %}" class="btn btn-outline">Nie, späť</a>
+        <a href="{% url 'frontend:stop_list' %}" class="btn btn-outline">Nie, späť</a>
     </form>
 </div>
 {% endblock %}

@@ -34,25 +34,51 @@
         <div class="container">
             <h1>Verejná Doprava</h1>
             <nav>
-                <a href="{% url 'home' %}">Hľadanie Trasy</a>
+                <a href="{% url 'frontend:home' %}">Hľadanie Trasy</a>
 
                 <div class="dropdown">
                     <span class="nav-link">Data</span>
                     <div class="dropdown-content">
-                        <a style="color: black;" href="{% url 'stop_list' %}">Zastávky</a>
-                        <a style="color: black;" href="{% url 'trip_list' %}">Spoje</a>
-                        <a style="color: black;" href="{% url 'route_list' %}">Linky</a>
-                        <a style="color: black;" href="{% url 'vehicle_list' %}">Vozidlá</a>
+                        <a style="color: black;" href="{% url 'frontend:stop_list' %}">Zastávky</a>
+                        <a style="color: black;" href="{% url 'frontend:trip_list' %}">Spoje</a>
+                        <a style="color: black;" href="{% url 'frontend:route_list' %}">Linky</a>
+                        <a style="color: black;" href="{% url 'frontend:vehicle_list' %}">Vozidlá</a>
                     </div>
                 </div>
 
+                {% if user.is_staff %}
                 <div class="dropdown">
-                    <span class="nav-link">Aministrativa</span>
+                    <span class="nav-link">Správa</span>
                     <div class="dropdown-content">
-                        <a style="color: black;" href="/admin/">Admin</a>
-                        <a style="color: black;" href="{% url 'file_upload' %}">File upload</a>
+                        <a style="color: black;" href="{% url 'frontend:stop_create' %}">Vytvoriť zastávku</a>
+                        <a style="color: black;" href="{% url 'frontend:trip_create' %}">Vytvoriť spoj</a>
+                        <a style="color: black;" href="{% url 'frontend:route_create' %}">Vytvoriť linku</a>
+                        <a style="color: black;" href="{% url 'frontend:vehicle_create' %}">Vytvoriť vozidlo</a>
+                        <a style="color: black;" href="{% url 'frontend:file_upload' %}">File upload</a>
                     </div>
                 </div>
+                {% endif %}
+
+                {% if user.is_authenticated %}
+                    <div class="dropdown">
+                        <span class="nav-link">{{ user.username }}</span>
+                        <div class="dropdown-content">
+                            <a style="color: black;" href="{% url 'users:profile' %}">Môj profil</a>
+                            {% if user.is_staff or user.is_superuser %}
+                                <a style="color: black;" href="{% url 'users:users_list' %}">Správa používateľov</a>
+                            {% endif %}
+                            <a style="color: black;" href="{% url 'personalization:favorites' %}">Obľúbené trasy</a>
+                            <hr style="margin: 5px 0;">
+                            <a style="color: black;" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Odhlásiť sa</a>
+                        </div>
+                    </div>
+                    <form id="logout-form" action="{% url 'users:logout' %}" method="post" style="display: none;">
+                        {% csrf_token %}
+                    </form>
+                {% else %}
+                    <a href="{% url 'users:login' %}">Prihlásiť sa</a>
+                    <a href="{% url 'users:register' %}" class="btn-register">Registrovať sa</a>
+                {% endif %}
             </nav>
         </div>
     </header>
@@ -64,17 +90,82 @@
 
     <footer>
         <div class="container text-center">
-            <p>2025 VAII – Semestrálna práca</p>
+            <p>2025 VAII Semestrálna práca</p>
             <p>Katarína Žiaková</p>
         </div>
     </footer>
 
     <script>
+        /*
+document.addEventListener('DOMContentLoaded', function () {
+    console.log("Inicializácia skriptov pre projekt Verejná Doprava...");
+
+    // --- 1. LOGIKA PRE DROPDOWN MENU (Data a Administratíva) ---
+    function setupDropdown(toggleId, menuId) {
+        const toggle = document.getElementById(toggleId);
+        const menu = document.getElementById(menuId);
+
+        if (toggle && menu) {
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const isOpen = menu.classList.toggle('active');
+                // Zmena šípky v texte
+                this.innerHTML = this.innerHTML.includes('▼') ? 
+                                 this.innerHTML.replace('▼', '▲') : 
+                                 this.innerHTML.replace('▲', '▼');
+            });
+        }
+    }
+
+    // Inicializujeme oba dropdowny, ak existujú
+    setupDropdown('data-toggle', 'data-menu');
+    setupDropdown('admin-toggle', 'admin-menu');
+
+    // Zatvorenie všetkých dropdownov pri kliknutí mimo nich
+    document.addEventListener('click', function (e) {
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+                const toggle = dropdown.querySelector('.nav-link');
+                if (toggle) toggle.innerHTML = toggle.innerHTML.replace('▲', '▼');
+            }
+        });
+    });
+
+    // --- 2. POTVRDENIE MAZANIA (Data Integrity Protection) ---
+    // Tento skript automaticky zachytí všetky tlačidlá s textom "Zmazať"
+    const allButtons = document.querySelectorAll('.btn-outline, .btn');
+    
+    allButtons.forEach(button => {
+        if (button.textContent.trim().toLowerCase().includes('zmazať')) {
+            button.addEventListener('click', function (e) {
+                const confirmMessage = "Naozaj chcete tento záznam odstrániť? Akcia je nevratná.";
+                if (!confirm(confirmMessage)) {
+                    e.preventDefault(); // Zruší akciu (neprejde na URL mazania)
+                    console.log("Mazanie bolo zrušené používateľom.");
+                } else {
+                    console.log("Používateľ potvrdil zmazanie záznamu.");
+                }
+            });
+        }
+    });
+
+    // --- 3. RESPONSIVE MENU HIGHLIGHT ---
+    // Zvýrazní odkaz v menu, na ktorom sa práve nachádzame
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('nav a').forEach(link => {
+        if (link.getAttribute('href') === currentPath && currentPath !== '/') {
+            link.style.color = '#ffcc00'; // Žlté zvýraznenie aktívnej stránky
+            link.style.fontWeight = 'bold';
+        }
+    });
+});
+*/
+
 document.addEventListener('DOMContentLoaded', function () {
     const dropdown = document.getElementById('admin-dropdown');
     const toggle = document.getElementById('admin-toggle');
 
-    // Pre mobile: toggle triedy .active a aria-expanded
     function toggleDropdown() {
         const isActive = dropdown.classList.toggle('active');
         dropdown.classList.toggle('open', isActive);
@@ -82,11 +173,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     toggle.addEventListener('click', function(e){
-        // vždy sprav toggle (desktop hover zostáva funkčný)
         toggleDropdown();
     });
 
-    // zatvorenie klikom mimo
     document.addEventListener('click', function(e){
         if (!dropdown.contains(e.target)) {
             dropdown.classList.remove('active', 'open');
@@ -94,7 +183,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // klávesnica
     toggle.addEventListener('keydown', function(e){
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -106,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
-</script>
+    </script>
 
     {% block extra_js %}{% endblock %}
 </body>

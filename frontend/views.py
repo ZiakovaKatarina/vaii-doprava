@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from data_management.models import Stop, Trip, Route, Vehicle
 from .forms import StopForm, TripForm, RouteForm, VehicleForm
+from django.contrib.auth.decorators import login_required
 
 def home(request):
     return render(request, 'home.html', {})
@@ -21,11 +22,11 @@ def stop_list(request):
 
 # CREATE
 def stop_create(request):
-    if request.method == "POST":
+    if request.method == 'POST':
         form = StopForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('stop_list')
+            return redirect('frontend:stop_list')  # bolo: redirect('stop_list')
     else:
         form = StopForm()
 
@@ -38,7 +39,7 @@ def stop_update(request, pk):
         form = StopForm(request.POST, instance=stop)
         if form.is_valid():
             form.save()
-            return redirect('stop_list')
+            return redirect('frontend:stop_list')  # bolo: redirect('stop_list')
     else:
         form = StopForm(instance=stop)
 
@@ -49,7 +50,7 @@ def stop_delete(request, pk):
     stop = get_object_or_404(Stop, pk=pk)
     if request.method == "POST":
         stop.delete()
-        return redirect('stop_list')
+        return redirect('frontend:stop_list')  # bolo: redirect('stop_list')
 
     return render(request, 'stops/stop_confirm_delete.html', {'stop': stop})
 
@@ -138,6 +139,7 @@ def vehicle_list(request):
     return render(request, 'vehicles/vehicle_list.html', {'vehicles': vehicles})
 
 # CREATE - Pridanie nového vozidla
+@login_required
 def vehicle_create(request):
     if request.method == "POST":
         form = VehicleForm(request.POST)
@@ -153,6 +155,7 @@ def vehicle_create(request):
     })
 
 # UPDATE - Úprava existujúceho vozidla
+@login_required
 def vehicle_update(request, pk):
     vehicle = get_object_or_404(Vehicle, pk=pk)
     if request.method == "POST":
@@ -169,6 +172,7 @@ def vehicle_update(request, pk):
     })
 
 # DELETE - Odstránenie vozidla
+@login_required
 def vehicle_delete(request, pk):
     vehicle = get_object_or_404(Vehicle, pk=pk)
     if request.method == "POST":

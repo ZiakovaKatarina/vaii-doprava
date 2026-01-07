@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Obľúbené trasy</h2>
+    
+    {% if favourite_routes %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Trasa</th>
+                    <th>Akcie</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fav in favourite_routes %}
+                    <tr>
+                        <td>{{ fav.route.name }}</td>
+                        <td>
+                            <a href="{% url 'frontend:route_update' fav.route.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
+                            <a href="{% url 'frontend:route_delete' fav.route.pk %}" class="btn btn-sm btn-danger">Odstrániť</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nemáte žiadne obľúbené trasy.</p>
+    {% endif %}
+</div>
+{% endblock %}

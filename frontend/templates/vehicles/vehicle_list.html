@@ -1,40 +1,40 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card">
-    <h2>Zoznam Vozidiel</h2>
+    <h2>Zoznam vozidiel</h2>
 
-    <a href="{% url 'vehicle_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
+    <a href="{% url 'frontend:vehicle_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
         + Pridať vozidlo
     </a>
 
-    <div class="table-wrapper"> 
+    <div class="table-wrapper">
         <table class="table">
             <thead>
                 <tr>
-                    <th>ŠPZ / Evidenčné číslo</th>
-                    <th>Model vozidla</th>
+                    <th>Značka</th>
+                    <th>Model</th>
                     <th>Kapacita</th>
                     <th>Akcie</th>
                 </tr>
             </thead>
             <tbody>
                 {% for vehicle in vehicles %}
-                <tr>
-                    <td><strong>{{ vehicle.registration_number }}</strong></td>
-                    <td>{{ vehicle.model_name }}</td>
-                    <td>{{ vehicle.capacity }} osôb</td>
-                    <td class="flex">
-                        <a class="btn btn-outline" href="{% url 'vehicle_update' vehicle.pk %}">Upraviť</a>
-                        <a class="btn btn-outline" href="{% url 'vehicle_delete' vehicle.pk %}">Zmazať</a>
-                    </td>
-                </tr>
+                    <tr>
+                        <td>{{ vehicle.brand }}</td>
+                        <td>{{ vehicle.model }}</td>
+                        <td>{{ vehicle.capacity }}</td>
+                        <td>
+                            <a href="{% url 'frontend:vehicle_update' vehicle.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
+                            <a href="{% url 'frontend:vehicle_delete' vehicle.pk %}" class="btn btn-sm btn-danger">Zmazať</a>
+                        </td>
+                    </tr>
                 {% empty %}
-                <tr>
-                    <td colspan="4" class="center text-muted">Žiadne vozidlá nie sú v evidencii.</td>
-                </tr>
+                    <tr>
+                        <td colspan="4">Žiadne vozidlá.</td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
-    </div> 
+    </div>
 </div>
 {% endblock %}

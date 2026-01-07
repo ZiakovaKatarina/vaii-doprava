@@ -3,35 +3,44 @@
 <div class="card">
     <h2>Zoznam zastávok</h2>
 
-    <a href="{% url 'stop_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
-        + Pridať zastávku
-    </a>
+    <!-- Tlačidlo len pre admin používateľov -->
+    {% if user.is_staff or user.is_superuser %}
+        <a href="{% url 'frontend:stop_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
+            + Pridať zastávku
+        </a>
+    {% endif %}
 
     <div class="table-wrapper">
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Názov</th>
-                <th>GPS Šírka</th>
-                <th>GPS Dĺžka</th>
-                <th>Akcie</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for stop in stops %}
-            <tr>
-                <td>{{ stop.name }}</td>
-                <td>{{ stop.latitude }}</td>
-                <td>{{ stop.longitude }}</td>
-                <td class="flex">
-                    <a class="btn btn-outline" href="{% url 'stop_update' stop.id %}">Upraviť</a>
-                    <a class="btn btn-outline" href="{% url 'stop_delete' stop.id %}">Zmazať</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Názov</th>
+                    <th>GPS Šírka</th>
+                    <th>GPS Dĺžka</th>
+                    <th>Akcie</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stop in stops %}
+                    <tr>
+                        <td>{{ stop.name }}</td>
+                        <td>{{ stop.latitude }}</td>
+                        <td>{{ stop.longitude }}</td>
+                        <td class="flex">
+                            <!-- Akcie len pre admin -->
+                            {% if user.is_staff or user.is_superuser %}
+                                <a href="{% url 'frontend:stop_update' stop.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
+                                <a href="{% url 'frontend:stop_delete' stop.pk %}" class="btn btn-sm btn-danger">Zmazať</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">Žiadne zastávky.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

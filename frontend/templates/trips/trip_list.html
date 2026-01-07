@@ -3,16 +3,20 @@
 <div class="card">
     <h2>Zoznam spojov</h2>
 
-    <a href="{% url 'trip_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
-        + Pridať spoj
-    </a>
+    <!-- Tlačidlo len pre admin používateľov -->
+    {% if user.is_staff or user.is_superuser %}
+        <a href="{% url 'frontend:trip_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
+            + Pridať spoj
+        </a>
+    {% endif %}
 
     <div class="table-wrapper">
         <table class="table">
             <thead>
                 <tr>
                     <th>Linka</th>
-                    <th>Vozidlo</th> <th>Zastávka (odchod)</th>
+                    <th>Vozidlo</th>
+                    <th>Zastávka (odchod)</th>
                     <th>Zastávka (príchod)</th>
                     <th>Čas odchodu</th>
                     <th>Čas príchodu</th>
@@ -21,24 +25,27 @@
             </thead>
             <tbody>
                 {% for trip in trips %}
-                <tr>
-                    <td>{{ trip.routeID }}</td>
-                    <td>
-                        {% if trip.vehicleID %}
-                            {{ trip.vehicleID }}
-                        {% else %}
-                            <span class="text-muted">Nepriradené</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ trip.startStopID }}</td>
-                    <td>{{ trip.endStopID }}</td>
-                    <td>{{ trip.departureTime|date:"d.m.Y H:i" }}</td>
-                    <td>{{ trip.arrivalTime|date:"d.m.Y H:i" }}</td>
-                    <td class="flex">
-                        <a class="btn btn-outline" href="{% url 'trip_update' trip.id %}">Upraviť</a>
-                        <a class="btn btn-outline" href="{% url 'trip_delete' trip.id %}">Zmazať</a>
-                    </td>
-                </tr>
+                    <tr>
+                        <td>{{ trip.route.name }}</td>
+                        <td>{{ trip.vehicle.name }}</td>
+                        <td>{{ trip.departure_stop.name }}</td>
+                        <td>{{ trip.arrival_stop.name }}</td>
+                        <td>{{ trip.departure_time }}</td>
+                        <td>{{ trip.arrival_time }}</td>
+                        <td>
+                            <!-- Akcie len pre admin -->
+                            {% if user.is_staff or user.is_superuser %}
+                                <a href="{% url 'frontend:trip_update' trip.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
+                                <a href="{% url 'frontend:trip_delete' trip.pk %}" class="btn btn-sm btn-danger">Zmazať</a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">Žiadne spoje.</td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
