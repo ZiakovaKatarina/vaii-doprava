@@ -12,7 +12,8 @@ urlpatterns = [
     path('stops/<int:pk>/update/', views.stop_update, name='stop_update'),
     path('stops/<int:pk>/delete/', views.stop_delete, name='stop_delete'),
     path('api/stops/<int:pk>/update/', views.stop_update_inline, name='stop_update_inline'),  # ← PRIDAJ
-    
+    path('api/stops/', views.stops_api, name='stops_api'),
+
     # Trips
     path('trips/', views.trip_list, name='trip_list'),
     path('trips/create/', views.trip_create, name='trip_create'),

@@ -12,6 +12,18 @@
     {% endif %}
   </div>
 
+  <!-- Vyhľadávacie pole -->
+  <input type="text" id="stops-search" placeholder="Hľadať..." style="margin-bottom:15px; padding:8px; width:250px;">
+
+  <!-- Výber počtu záznamov na stránku -->
+  <label for="stops-page-size" style="margin-left:20px;">Záznamov na stránku:</label>
+  <select id="stops-page-size" style="margin-bottom:15px; padding:6px;">
+    <option value="5">5</option>
+    <option value="10" selected>10</option>
+    <option value="20">20</option>
+    <option value="50">50</option>
+  </select>
+
   <table class="table">
     <thead>
       <tr>
@@ -23,6 +35,7 @@
         {% endif %}
       </tr>
     </thead>
+    <!--
     <tbody>
       {% for stop in stops %}
         <tr>
@@ -38,14 +51,24 @@
         </tr>
       {% empty %}
         <tr><td colspan="4" style="text-align:center;color:#999;">Žiadne zastávky</td></tr>
-      {% endfor %}
+      {% endfor %}-->
+      <tbody id="stops-tbody">
     </tbody>
   </table>
   
+  <!-- Stránkovanie -->
+  <div id="stops-pagination" style="display:flex;justify-content:space-between;margin-top:20px;">
+    <button id="stops-prev" class="btn">← Predošlá</button>
+    <span id="stops-page-info">Strana 1 z 1</span>
+    <button id="stops-next" class="btn">Ďalšia →</button>
+  </div>
+
   <p style="color:#666;font-size:0.9rem;margin-top:10px;">
     💡 Dvojklik na názov, zemepisnú šírku alebo dĺžku pre rýchlu úpravu
   </p>
 </div>
+
+<form style="display:none;">{% csrf_token %}</form>
 
 <style>
 .table{width:100%;border-collapse:collapse;}
@@ -63,4 +86,6 @@
 
 {% block extra_js %}
 <script src="{% static 'js/inline-edit.js' %}"></script>
+<script src="{% static 'js/stops-table.js' %}"></script>
+<script src="{% static 'js/ajax-delete.js' %}"></script>
 {% endblock %}

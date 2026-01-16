@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.views.decorators.http import require_http_methods, require_GET
 from users.decorators import admin_required
 import json
 
@@ -56,12 +58,16 @@ def stop_update(request, pk):
     return render(request, 'stops/stop_form.html', {'form': form, 'title': 'Upraviť zastávku'})
 
 @admin_required
+@require_http_methods(["DELETE", "POST"])
 def stop_delete(request, pk):
-    stop = get_object_or_404(Stop, pk=pk)
-    if request.method == "POST":
+    try:
+        stop = Stop.objects.get(pk=pk)
         stop.delete()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True})
         return redirect('frontend:stop_list')
-    return render(request, 'stops/stop_confirm_delete.html', {'stop': stop})
+    except Stop.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': 'Zastávka neexistuje'}, status=404)
 
 @require_http_methods(['PATCH'])
 @login_required
@@ -82,6 +88,39 @@ def stop_update_inline(request, pk):
     
     stop.save()
     return JsonResponse({'ok': True})
+
+@require_GET
+def stops_api(request):
+    search = (request.GET.get('search') or '').strip()
+    page = int(request.GET.get('page') or 1)
+    page_size = int(request.GET.get('page_size') or 10)
+
+    qs = Stop.objects.all()
+    if search:
+        qs = qs.filter(
+            Q(name__icontains=search) |
+            Q(latitude__icontains=search) |
+            Q(longitude__icontains=search)
+        )
+    qs = qs.order_by('name')
+    paginator = Paginator(qs, page_size)
+    page_obj = paginator.get_page(page)
+
+    stops = [
+        {
+            'id': s.id,
+            'name': s.name,
+            'latitude': str(s.latitude),
+            'longitude': str(s.longitude)
+        }
+        for s in page_obj.object_list
+    ]
+
+    return JsonResponse({
+        'stops': stops,
+        'page': page_obj.number,
+        'pages': paginator.num_pages,
+    })
 
 # Trips
 def trip_list(request):
