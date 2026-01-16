@@ -81,8 +81,7 @@ Admin           všetky CRUD, správa používateľov
 Registrovaný    Čítanie, obľúbené trasy
 Anonymný        Iba čítanie verejných dát
 
-## 📁 Štruktúra
-
+## Štruktúra
 ```
 vaii-doprava/
 ├── users/              # Auth, registrácia, roly
@@ -95,6 +94,5 @@ vaii-doprava/
 └── manage.py
 ```
 
-## 📝 Autori
-
+## Autori
 Katarína Žiaková - Semestrálna práca VAII 2025
