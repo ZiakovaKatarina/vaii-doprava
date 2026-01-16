@@ -165,29 +165,23 @@ document.addEventListener('DOMContentLoaded', function () {
 document.addEventListener('DOMContentLoaded', function () {
     const dropdown = document.getElementById('admin-dropdown');
     const toggle = document.getElementById('admin-toggle');
+    if (!dropdown || !toggle) return; // guard proti neexistujúcim ID
 
     function toggleDropdown() {
         const isActive = dropdown.classList.toggle('active');
         dropdown.classList.toggle('open', isActive);
         toggle.setAttribute('aria-expanded', isActive ? 'true' : 'false');
     }
-
-    toggle.addEventListener('click', function(e){
-        toggleDropdown();
-    });
-
+    toggle.addEventListener('click', function(e){ toggleDropdown(); });
     document.addEventListener('click', function(e){
         if (!dropdown.contains(e.target)) {
             dropdown.classList.remove('active', 'open');
             toggle.setAttribute('aria-expanded', 'false');
         }
     });
-
     toggle.addEventListener('keydown', function(e){
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            toggleDropdown();
-        } else if (e.key === 'Escape') {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
+        else if (e.key === 'Escape') {
             dropdown.classList.remove('active','open');
             toggle.setAttribute('aria-expanded','false');
             toggle.focus();

@@ -2,12 +2,18 @@ from django import forms
 from .models import Trip
 from .models import Route
 from .models import Stop
+from .models import Vehicle
 import re
 
 class StopForm(forms.ModelForm):
     class Meta:
         model = Stop
         fields = ['name', 'latitude', 'longitude']
+        labels = {
+            'name': 'Názov zastávky',
+            'latitude': 'Zemepisná šírka',
+            'longitude': 'Zemepisná dĺžka',
+        }
 
     def clean(self):
         cleaned_data = super().clean()
@@ -31,7 +37,7 @@ class StopForm(forms.ModelForm):
 class RouteForm(forms.ModelForm):
     class Meta:
         model = Route
-        fields = ['name', 'type']
+        fields = ['name', 'start_stop', 'end_stop']
 
     def clean(self):
         cleaned_data = super().clean()
@@ -55,7 +61,11 @@ class RouteForm(forms.ModelForm):
 class TripForm(forms.ModelForm):
     class Meta:
         model = Trip
-        fields = ['route', 'startStop', 'endStop', 'departureTime', 'arrivalTime']
+        fields = ['route', 'departure_time', 'arrival_time', 'vehicleID']
+        widgets = {
+            'departure_time': forms.TimeInput(attrs={'type': 'time'}),
+            'arrival_time': forms.TimeInput(attrs={'type': 'time'}),
+        }
 
     def clean(self):
         cleaned_data = super().clean()
@@ -71,3 +81,12 @@ class TripForm(forms.ModelForm):
             self.add_error('arrival_time', "Čas príchodu musí byť neskôr ako čas odchodu.")
 
         return cleaned_data
+
+class VehicleForm(forms.ModelForm):
+    class Meta:
+        model = Vehicle
+        fields = ['registration_number', 'vehicle_type', 'capacity']
+        widgets = {
+            'registration_number': forms.TextInput(attrs={'placeholder': 'ŠPZ'}),
+            'capacity': forms.NumberInput(attrs={'min': 1}),
+        }

@@ -1,13 +1,36 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Správa používateľov{% endblock %}
 
 {% block content %}
 <div class="container" style="margin-top:30px;">
-  <h2 style="margin-bottom:20px;">Správa používateľov</h2>
+  <h2 style="margin-bottom:16px;">Správa používateľov</h2>
+
+  <div class="toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+    <input id="user-search" type="text" placeholder="Hľadať používateľa..." style="flex:1;min-width:220px;padding:8px 10px;border:1px solid #ccc;border-radius:6px;">
+    <select id="role-filter" style="padding:8px 10px;border:1px solid #ccc;border-radius:6px;">
+      <option value="">Všetci</option>
+      <option value="admin">Admin</option>
+      <option value="registered">Registrovaný</option>
+    </select>
+    <select id="ordering" style="padding:8px 10px;border:1px solid #ccc;border-radius:6px;">
+      <option value="-date_joined">Najnovší</option>
+      <option value="date_joined">Najstarší</option>
+      <option value="username">Meno A→Z</option>
+      <option value="-username">Meno Z→A</option>
+      <option value="email">Email A→Z</option>
+      <option value="-email">Email Z→A</option>
+    </select>
+    <select id="page-size" style="padding:8px 10px;border:1px solid #ccc;border-radius:6px;">
+      <option value="10">10</option>
+      <option value="20">20</option>
+      <option value="50">50</option>
+    </select>
+  </div>
 
   <div class="table-wrapper" style="overflow-x:auto;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);">
-    <table class="table">
+    <table id="users-table" class="table" data-current-user-id="{{ request.user.id }}">
       <thead>
         <tr>
           <th>Používateľské meno</th>
@@ -19,29 +42,27 @@
           <th style="text-align:center;">Akcie</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="users-tbody">
         {% for user in users %}
           <tr {% if user.id == request.user.id %}style="background-color:#e8f4f8;"{% endif %}>
             <td>
               <strong>{{ user.username }}</strong>
-              {% if user.id == request.user.id %}
-                <span style="color:#0066cc;font-weight:bold;margin-left:8px;">(Vy)</span>
-              {% endif %}
+              {% if user.id == request.user.id %}<span style="color:#0066cc;font-weight:bold;margin-left:8px;">(Vy)</span>{% endif %}
             </td>
             <td>{{ user.email }}</td>
             <td>{{ user.first_name|default:"-" }}</td>
             <td>{{ user.last_name|default:"-" }}</td>
             <td>
-              {% if user.is_staff %}
-                <span class="badge badge-admin">Admin</span>
-              {% else %}
-                <span class="badge badge-role">Registrovaný používateľ</span>
-              {% endif %}
+              {% if user.is_staff %}<span class="badge badge-admin">Admin</span>{% else %}<span class="badge badge-role">Registrovaný používateľ</span>{% endif %}
             </td>
             <td style="white-space:nowrap;">{{ user.date_joined|date:"d.m.Y H:i" }}</td>
             <td style="text-align:center;">
               {% if user.id != request.user.id %}
-                <div style="display:flex;gap:.5rem;justify-content:center;">
+                <div style="display:flex;gap:.5rem;justify-content:center;align-items:center;">
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                    <input type="checkbox" class="js-toggle-staff" data-user-id="{{ user.pk }}" {% if user.is_staff %}checked{% endif %}>
+                    <span style="font-size:.9rem;">Admin práva</span>
+                  </label>
                   <a href="{% url 'users:users_edit' user.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
                   <a href="{% url 'users:send_password_reset' user.pk %}" class="btn btn-sm btn-outline">Reset hesla</a>
                 </div>
@@ -54,6 +75,12 @@
       </tbody>
     </table>
   </div>
+
+  <div id="users-pagination" style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;align-items:center;">
+    <button id="users-prev" class="btn btn-outline btn-sm">Predchádzajúca</button>
+    <span id="users-page-info" style="color:#666;">Strana 1 z 1</span>
+    <button id="users-next" class="btn btn-outline btn-sm">Ďalšia</button>
+  </div>
 </div>
 
 <style>
@@ -61,7 +88,6 @@
 .table th{padding:15px 12px;text-align:left;background:#f8f9fa;font-weight:600;color:#333;border-bottom:2px solid #dee2e6;}
 .table td{padding:12px;border-bottom:1px solid #eee;vertical-align:middle;}
 .table tbody tr:hover{background-color:#f5f5f5;}
-.table tbody tr:last-child td{border-bottom:none;}
 .badge{display:inline-block;padding:5px 12px;border-radius:15px;font-size:0.85rem;font-weight:600;white-space:nowrap;}
 .badge-admin{background:#dc3545;color:#fff;}
 .badge-role{background:#28a745;color:#fff;}
@@ -71,4 +97,8 @@
 .btn-outline{background:#fff;color:#6c757d;border:1px solid #6c757d;}
 .btn-outline:hover{background:#6c757d;color:#fff;}
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/users.js' %}"></script>
 {% endblock %}

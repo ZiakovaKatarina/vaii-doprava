@@ -1,100 +1,98 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Registrácia{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 600px; margin: 50px auto;">
-    <div class="card">
-        <div class="card-header">
-            <h2>Registrácia nového účtu</h2>
-        </div>
-        <div class="card-body">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-
-            <form method="post" id="registrationForm" novalidate>
-                {% csrf_token %}
-                
-                <div class="form-group">
-                    <label for="{{ form.username.id_for_label }}">Používateľské meno *</label>
-                    {{ form.username }}
-                    <div class="invalid-feedback"></div>
-                    {% if form.username.errors %}
-                        {% for error in form.username.errors %}
-                            <div class="error-message">{{ error }}</div>
-                        {% endfor %}
-                    {% endif %}
-                    <small class="form-text">Min. 4 znaky, len písmená, čísla a podčiarkovník</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.email.id_for_label }}">Email *</label>
-                    {{ form.email }}
-                    <div class="invalid-feedback"></div>
-                    {% if form.email.errors %}
-                        {% for error in form.email.errors %}
-                            <div class="error-message">{{ error }}</div>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-
-                <div class="form-group">
-                    <label for="id_first_name">Meno</label>
-                    {{ form.first_name }}
-                </div>
-                <div class="form-group">
-                    <label for="id_last_name">Priezvisko</label>
-                    {{ form.last_name }}
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.password1.id_for_label }}">Heslo *</label>
-                    {{ form.password1 }}
-                    <div class="invalid-feedback"></div>
-                    {% if form.password1.errors %}
-                        {% for error in form.password1.errors %}
-                            <div class="error-message">{{ error }}</div>
-                        {% endfor %}
-                    {% endif %}
-                    <div class="password-requirements">
-                        <small><strong>Heslo musí obsahovať:</strong></small>
-                        <ul id="passwordChecklist">
-                            <li id="length-check">Min. 8 znakov</li>
-                            <li id="uppercase-check">Aspoň jedno veľké písmeno (A-Z)</li>
-                            <li id="lowercase-check">Aspoň jedno malé písmeno (a-z)</li>
-                            <li id="number-check">Aspoň jedno číslo (0-9)</li>
-                            <li id="special-check">Aspoň jeden špeciálny znak (!@#$%...)</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.password2.id_for_label }}">Potvrdenie hesla *</label>
-                    {{ form.password2 }}
-                    <div class="invalid-feedback"></div>
-                    {% if form.password2.errors %}
-                        {% for error in form.password2.errors %}
-                            <div class="error-message">{{ error }}</div>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    Registrovať sa
-                </button>
-
-                <div style="text-align: center; margin-top: 20px;">
-                    <p>Už máte účet? <a href="{% url 'users:login' %}">Prihláste sa</a></p>
-                </div>
-            </form>
-        </div>
+<div class="container" style="max-width:500px;margin-top:50px;">
+  <h2>Registrácia</h2>
+  
+  <form method="post" id="registrationForm" novalidate>
+    {% csrf_token %}
+    
+    <div class="form-group">
+      <label for="{{ form.username.id_for_label }}">Používateľské meno *</label>
+      {{ form.username }}
+      <div class="invalid-feedback"></div>
+      {% if form.username.errors %}
+          {% for error in form.username.errors %}
+              <div class="error-message">{{ error }}</div>
+          {% endfor %}
+      {% endif %}
+      <small class="form-text">Min. 4 znaky, len písmená, čísla a podčiarkovník</small>
     </div>
+
+    <div class="form-group">
+      <label for="{{ form.email.id_for_label }}">Email *</label>
+      {{ form.email }}
+      <div class="invalid-feedback"></div>
+      {% if form.email.errors %}
+          {% for error in form.email.errors %}
+              <div class="error-message">{{ error }}</div>
+          {% endfor %}
+      {% endif %}
+    </div>
+
+    <div class="form-group">
+      <label for="id_first_name">Meno</label>
+      {{ form.first_name }}
+    </div>
+    <div class="form-group">
+      <label for="id_last_name">Priezvisko</label>
+      {{ form.last_name }}
+    </div>
+
+    <div class="form-group">
+      <label for="{{ form.password1.id_for_label }}">Heslo *</label>
+      {{ form.password1 }}
+      <div class="invalid-feedback"></div>
+      {% if form.password1.errors %}
+          {% for error in form.password1.errors %}
+              <div class="error-message">{{ error }}</div>
+          {% endfor %}
+      {% endif %}
+      <div class="password-requirements">
+        <small><strong>Heslo musí obsahovať:</strong></small>
+        <ul id="passwordChecklist">
+          <li id="length-check">Min. 8 znakov</li>
+          <li id="uppercase-check">Aspoň jedno veľké písmeno (A-Z)</li>
+          <li id="lowercase-check">Aspoň jedno malé písmeno (a-z)</li>
+          <li id="number-check">Aspoň jedno číslo (0-9)</li>
+          <li id="special-check">Aspoň jeden špeciálny znak (!@#$%...)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="{{ form.password2.id_for_label }}">Potvrdenie hesla *</label>
+      {{ form.password2 }}
+      <div class="invalid-feedback"></div>
+      {% if form.password2.errors %}
+          {% for error in form.password2.errors %}
+              <div class="error-message">{{ error }}</div>
+          {% endfor %}
+      {% endif %}
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width: 100%;">
+      Registrovať sa
+    </button>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <p>Už máte účet? <a href="{% url 'users:login' %}">Prihláste sa</a></p>
+    </div>
+  </form>
+  
+  <p style="margin-top:20px;">
+    Už máte účet? <a href="{% url 'users:login' %}">Prihláste sa</a>
+  </p>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/validation.js' %}"></script>
+{% endblock %}
 
 <style>
 .card {
@@ -340,4 +338,3 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-{% endblock %}

@@ -35,4 +35,6 @@ urlpatterns = [
     path('users-list/', views.users_list, name='users_list'),
     path('users/<int:pk>/edit/', views.users_edit, name='users_edit'),
     path('users/<int:pk>/password-reset/', views.send_password_reset, name='send_password_reset'),
+    path('api/users/', views.users_list_api, name='users_list_api'),
+    path('api/users/<int:pk>/toggle-staff/', views.toggle_staff, name='toggle_staff'),
 ]
