@@ -34,7 +34,11 @@ def stop_create(request):
         form = StopForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('frontend:stop_list')
+            # AJAX response
+            return JsonResponse({'ok': True, 'redirect': '/stops/'})
+        else:
+            # AJAX error response
+            return JsonResponse({'ok': False, 'errors': str(form.errors)}, status=400)
     else:
         form = StopForm()
     return render(request, 'stops/stop_form.html', {'form': form, 'title': 'Pridať zastávku'})

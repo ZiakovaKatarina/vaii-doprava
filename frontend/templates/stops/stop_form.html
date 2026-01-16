@@ -1,8 +1,10 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block content %}
 <div class="card">
     <h2>{{ title }}</h2>
-    <form id="stop-form" method="post">
+    <form id="stop-form" method="post" action="{% url 'frontend:stop_create' %}">
         {% csrf_token %}
         {% for field in form %}
             <div class="form-group">
@@ -28,12 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const lon = document.querySelector('input[name="longitude"]');
     const name = document.querySelector('input[name="name"]');
 
-    // Získanie alert elementu pod polom
     function getAlert(input) {
         return input.parentElement.querySelector('.alert');
     }
 
-    // Funkcia pre range validáciu
     function validateRange(input, min, max) {
         input.addEventListener('input', () => {
             const alertBox = getAlert(input);
@@ -53,11 +53,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Range validácia
     validateRange(lat, -90, 90);
     validateRange(lon, -180, 180);
 
-    // Kontrola required pre názov
     name.addEventListener('input', () => {
         const alertBox = getAlert(name);
         const nameValue = name.value.trim();
@@ -81,13 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Zabránime odoslaniu, ak sú chyby
-    form.addEventListener('submit', (e) => {
-        if (!form.checkValidity()) {
-            e.preventDefault();
-            form.reportValidity(); // štandardný browser alert
-        }
-    });
+    // ODSTRÁNENÝ duplicitný submit handler (je už v ajax-forms.js)
 });
 </script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/ajax-forms.js' %}"></script>
 {% endblock %}
