@@ -11,8 +11,8 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>Značka</th>
-                    <th>Model</th>
+                    <th>ŠPZ</th>
+                    <th>Typ</th>
                     <th>Kapacita</th>
                     <th>Akcie</th>
                 </tr>
@@ -20,8 +20,8 @@
             <tbody>
                 {% for vehicle in vehicles %}
                     <tr>
-                        <td>{{ vehicle.brand }}</td>
-                        <td>{{ vehicle.model }}</td>
+                        <td>{{ vehicle.registration_number }}</td>
+                        <td>{{ vehicle.get_vehicle_type_display  }}</td>
                         <td>{{ vehicle.capacity }}</td>
                         <td>
                             <a href="{% url 'frontend:vehicle_update' vehicle.pk %}" class="btn btn-sm btn-primary">Upraviť</a>

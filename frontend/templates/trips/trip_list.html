@@ -27,9 +27,9 @@
                 {% for trip in trips %}
                     <tr>
                         <td>{{ trip.route.name }}</td>
-                        <td>{{ trip.vehicle.name }}</td>
-                        <td>{{ trip.departure_stop.name }}</td>
-                        <td>{{ trip.arrival_stop.name }}</td>
+                        <td>{% if trip.vehicleID %}{{ trip.vehicleID.registration_number }}{% else %}-{% endif %}</td>
+                        <td>{{ trip.route.start_stop.name }}</td>
+                        <td>{{ trip.route.end_stop.name }}</td>
                         <td>{{ trip.departure_time }}</td>
                         <td>{{ trip.arrival_time }}</td>
                         <td>
