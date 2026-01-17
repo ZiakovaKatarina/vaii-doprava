@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Vyhľadanie spojenia</h2>
+
+<form method="get" action="{% url 'frontend:search_connections' %}" style="max-width: 700px;">
+  <label>Odkiaľ</label>
+  <select name="start_stop" required>
+    <option value="">-- vyber --</option>
+    {% for s in stops %}
+      <option value="{{ s.id }}" {% if start_id == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+    {% endfor %}
+  </select>
+
+  <label style="margin-top:10px;">Kam</label>
+  <select name="end_stop" required>
+    <option value="">-- vyber --</option>
+    {% for s in stops %}
+      <option value="{{ s.id }}" {% if end_id == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+    {% endfor %}
+  </select>
+
+  <div style="margin-top:12px;">
+    <button type="submit" class="btn btn-primary">Hľadať</button>
+  </div>
+</form>
+
+{% if start_stop and end_stop %}
+  <h3 style="margin-top:25px;">Výsledky: {{ start_stop.name }} → {{ end_stop.name }}</h3>
+
+  {% if connections %}
+    <table class="table" style="margin-top:10px;">
+      <thead>
+        <tr>
+          <th>Linka</th>
+          <th>Smer</th>
+          <th>Odchod</th>
+          <th>Príchod</th>
+          <th>Vozidlo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in connections %}
+          <tr>
+            <td>{{ c.route.name }}</td>
+            <td>{{ c.direction }}</td>
+            <td>{{ c.trip.departure_time }}</td>
+            <td>{{ c.trip.arrival_time }}</td>
+            <td>
+              {% if c.vehicle %}
+                {{ c.vehicle.registration_number }} ({{ c.vehicle.get_vehicle_type_display }})
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Pre túto dvojicu zastávok nebolo nájdené priame spojenie.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

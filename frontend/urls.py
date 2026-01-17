@@ -36,4 +36,7 @@ urlpatterns = [
     path('upload/', views.file_upload, name='file_upload'),
     path('upload/jdf/', views.jdf_upload, name='jdf_upload'),
     path('upload/gdtf/', views.gdtf_upload, name='gdtf_upload'),
+
+    # Search
+    path('search/', views.search_connections, name='search_connections'),
 ]

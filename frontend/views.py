@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -229,3 +230,42 @@ def vehicle_delete(request, pk):
         vehicle.delete()
         return redirect('frontend:vehicle_list')
     return render(request, 'vehicles/vehicle_confirm_delete.html', {'vehicle': vehicle})
+
+# Connections
+def search_connections(request):
+    stops = Stop.objects.all().order_by('name')
+    start_id = request.GET.get('start_stop')
+    end_id = request.GET.get('end_stop')
+
+    connections = []
+    start_stop = None
+    end_stop = None
+
+    if start_id and end_id and start_id != end_id:
+        start_stop = get_object_or_404(Stop, pk=start_id)
+        end_stop = get_object_or_404(Stop, pk=end_id)
+
+        routes = Route.objects.filter(
+            Q(start_stop=start_stop, end_stop=end_stop) |
+            Q(start_stop=end_stop, end_stop=start_stop)
+        )
+
+        trips = Trip.objects.filter(route__in=routes).select_related('route', 'vehicleID').order_by('departure_time')
+
+        for t in trips:
+            direction = "tam" if (t.route.start_stop_id == start_stop.id and t.route.end_stop_id == end_stop.id) else "späť"
+            connections.append({
+                "trip": t,
+                "route": t.route,
+                "vehicle": t.vehicleID,
+                "direction": direction,
+            })
+
+    return render(request, "search_connections.html", {
+        "stops": stops,
+        "connections": connections,
+        "start_id": start_id,
+        "end_id": end_id,
+        "start_stop": start_stop,
+        "end_stop": end_stop,
+    })
