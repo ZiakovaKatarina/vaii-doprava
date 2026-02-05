@@ -26,7 +26,21 @@
 </form>
 
 {% if start_stop and end_stop %}
-  <h3 style="margin-top:25px;">Výsledky: {{ start_stop.name }} → {{ end_stop.name }}</h3>
+  <div style="display: flex; align-items: center; gap: 15px; margin-top: 25px;">
+    <h3>Výsledky: {{ start_stop.name }} → {{ end_stop.name }}</h3>
+    
+    {% if user.is_authenticated %}
+        <button id="btn-add-favorite" 
+                class="btn btn-outline" 
+                style="padding: 5px 10px; font-size: 0.9rem;"
+                data-start="{{ start_stop.name }}" 
+                data-end="{{ end_stop.name }}">
+            ⭐ Pridať do obľúbených
+        </button>
+    {% endif %}
+  </div>
+
+  <div id="favorite-status" style="margin-top: 5px; font-size: 0.85rem; display: none;"></div>
 
   {% if connections %}
     <table class="table" style="margin-top:10px;">
@@ -64,4 +78,45 @@
     <p>Pre túto dvojicu zastávok nebolo nájdené priame spojenie.</p>
   {% endif %}
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const favBtn = document.getElementById('btn-add-favorite');
+    const statusDiv = document.getElementById('favorite-status');
+
+    if (favBtn) {
+        favBtn.addEventListener('click', function() {
+            const start = this.dataset.start;
+            const end = this.dataset.end;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+            fetch("{% url 'personalization:add_favorite_ajax' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ start: start, end: end })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok) {
+                    statusDiv.style.display = "block";
+                    statusDiv.style.color = "green";
+                    statusDiv.textContent = "✅ " + data.message;
+                    favBtn.disabled = true;
+                } else {
+                    alert("Chyba: " + data.error);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Nepodarilo sa uložiť trasu.");
+            });
+        });
+    }
+});
+</script>
 {% endblock %}
