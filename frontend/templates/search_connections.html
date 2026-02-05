@@ -26,58 +26,74 @@
 </form>
 
 {% if start_stop and end_stop %}
-  <div style="display: flex; align-items: center; gap: 15px; margin-top: 25px;">
-    <h3>Výsledky: {{ start_stop.name }} → {{ end_stop.name }}</h3>
-    
-    {% if user.is_authenticated %}
+  <div style="margin-top: 25px;">
+    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+      <h3 style="margin: 0;">Výsledky: {{ start_stop.name }} → {{ end_stop.name }}</h3>
+      
+      {% if user.is_authenticated %}
         <button id="btn-add-favorite" 
                 class="btn btn-outline" 
-                style="padding: 5px 10px; font-size: 0.9rem;"
+                style="padding: 5px 10px; font-size: 0.9rem; white-space: nowrap;"
                 data-start="{{ start_stop.name }}" 
                 data-end="{{ end_stop.name }}">
-            ⭐ Pridať do obľúbených
+          ⭐ Pridať do obľúbených
         </button>
+      {% endif %}
+    </div>
+
+    <div id="favorite-status" style="margin-bottom: 15px; font-size: 0.85rem; display: none;"></div>
+
+    {% if direct_connections %}
+      <div style="margin-top: 15px;">
+        {% if direct_connections.0.has_times %}
+          <h4>Priame spoje:</h4>
+          <table class="table" style="margin-top: 10px;">
+            <thead>
+              <tr>
+                <th>Linka</th>
+                <th>Odchod</th>
+                <th>Príchod</th>
+                <th>Vozidlo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in direct_connections %}
+                <tr>
+                  <td><strong>{{ c.route.name }}</strong></td>
+                  <td>{{ c.trip.departure_time|time:"H:i" }}</td>
+                  <td>{{ c.trip.arrival_time|time:"H:i" }}</td>
+                  <td>{{ c.trip.vehicleID.registration_number|default:"-" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p style="margin-top: 15px;">
+            Existuje priama linka <strong>{{ direct_connections.0.route.name }}</strong>.
+          </p>
+        {% endif %}
+      </div>
+
+    {% elif transfer_connections %}
+      <div style="margin-top: 15px;">
+        <h4>Navrhované prestupy:</h4>
+        <p style="margin: 10px 0;">Priame spojenie neexistuje. Môžete prestúpiť:</p>
+        <ul style="margin-top: 10px; list-style-type: disc; padding-left: 25px; line-height: 1.6;">
+          {% for t in transfer_connections %}
+            <li>
+              Linkou <strong>{{ t.route1.name }}</strong> na zastávku <strong>{{ t.stop_x.name }}</strong> 
+              a tam prestúpiť na linku <strong>{{ t.route2.name }}</strong>.
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+    {% else %}
+      <p style="margin-top: 15px; color: #666;">Nebolo nájdené žiadne spojenie.</p>
     {% endif %}
   </div>
-
-  <div id="favorite-status" style="margin-top: 5px; font-size: 0.85rem; display: none;"></div>
-
-  {% if connections %}
-    <table class="table" style="margin-top:10px;">
-      <thead>
-        <tr>
-          <th>Linka</th>
-          <th>Smer</th>
-          <th>Odchod</th>
-          <th>Príchod</th>
-          <th>Vozidlo</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for c in connections %}
-          <tr>
-            <td>{{ c.route.name }}</td>
-            <td>{{ c.direction }}</td>
-            <td>{{ c.trip.departure_time }}</td>
-            <td>{{ c.trip.arrival_time }}</td>
-            <td>
-              {% if c.vehicle %}
-                {{ c.vehicle.registration_number }} ({{ c.vehicle.get_vehicle_type_display }})
-              {% else %}
-                -
-              {% endif %}
-            </td>
-          </tr>
-          {% if c.segment %}
-            <div>Trasa: {{ c.segment|join:" → " }}</div>
-          {% endif %}
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p>Pre túto dvojicu zastávok nebolo nájdené priame spojenie.</p>
-  {% endif %}
 {% endif %}
+
 {% endblock %}
 
 {% block extra_js %}
@@ -87,10 +103,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusDiv = document.getElementById('favorite-status');
 
     if (favBtn) {
-        favBtn.addEventListener('click', function() {
+        favBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
             const start = this.dataset.start;
             const end = this.dataset.end;
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                             document.querySelector('[name=csrf]')?.value;
 
             fetch("{% url 'personalization:add_favorite_ajax' %}", {
                 method: "POST",
@@ -102,18 +121,21 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
+                statusDiv.style.display = "block";
                 if (data.ok) {
-                    statusDiv.style.display = "block";
                     statusDiv.style.color = "green";
                     statusDiv.textContent = "✅ " + data.message;
                     favBtn.disabled = true;
                 } else {
-                    alert("Chyba: " + data.error);
+                    statusDiv.style.color = "red";
+                    statusDiv.textContent = "❌ Chyba: " + (data.error || "Neznáma chyba");
                 }
             })
             .catch(error => {
                 console.error("Error:", error);
-                alert("Nepodarilo sa uložiť trasu.");
+                statusDiv.style.display = "block";
+                statusDiv.style.color = "red";
+                statusDiv.textContent = "❌ Nepodarilo sa uložiť trasu.";
             });
         });
     }

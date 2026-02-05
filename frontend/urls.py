@@ -30,6 +30,7 @@ urlpatterns = [
         views.route_stops_manage,
         name="route_stops_manage",
     ),
+    path("routes/<int:route_id>/stops/renumber/", views.route_stops_renumber, name="route_stops_renumber"),
     path("routes/<int:route_id>/stops/<int:rs_id>/delete/", views.route_stop_delete, name="route_stop_delete"),
 
     # Vehicles

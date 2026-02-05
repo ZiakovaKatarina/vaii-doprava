@@ -3,12 +3,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.core.paginator import Paginator
-from django.db.models import Q, Max
+from django.db.models import Q, Max, F
 from django.views.decorators.http import require_http_methods, require_GET
 from users.decorators import admin_required
 from django.contrib import messages
 from django.db.models import ProtectedError
 import json
+from django.db import transaction
 
 from data_management.models import Stop, Trip, Route, Vehicle, RouteStop
 from data_management.forms import StopForm, TripForm, RouteForm, VehicleForm
@@ -277,7 +278,8 @@ def search_connections(request):
     start_id = request.GET.get("start_stop")
     end_id = request.GET.get("end_stop")
 
-    connections = []
+    direct_connections = []
+    transfer_connections = []
     start_stop = None
     end_stop = None
 
@@ -285,62 +287,148 @@ def search_connections(request):
         start_stop = get_object_or_404(Stop, pk=start_id)
         end_stop = get_object_or_404(Stop, pk=end_id)
 
-        candidate_routes = Route.objects.filter(
-            route_stops__stop=start_stop,
-        ).filter(
-            route_stops__stop=end_stop
-        ).distinct()
+        # --- PRIAME TRASY ---
+        start_rss = RouteStop.objects.filter(stop=start_stop)
+        for s_rs in start_rss:
+            valid_ends = RouteStop.objects.filter(
+                route=s_rs.route, 
+                stop=end_stop, 
+                order__gt=s_rs.order
+            )
+            
+            if valid_ends.exists():
+                trips = Trip.objects.filter(route=s_rs.route).select_related('vehicleID')
+                if trips.exists():
+                    for t in trips:
+                        direct_connections.append({
+                            "route": s_rs.route,
+                            "trip": t,
+                            "has_times": True
+                        })
+                else:
+                    # Trasa existuje, ale bez konkrétnych spojov (Tripov)
+                    direct_connections.append({
+                        "route": s_rs.route,
+                        "has_times": False
+                    })
 
-        route_stops_map = {}
-        rs_qs = RouteStop.objects.filter(route__in=candidate_routes).select_related("stop").order_by("route_id", "order")
-        for rs in rs_qs:
-            route_stops_map.setdefault(rs.route_id, []).append(rs.stop_id)
+        # --- PRESTUPY (iba ak nie sú priame) ---
+        if not direct_connections:
+            seen_transfers = set()
+            r1_list = RouteStop.objects.filter(stop=start_stop)
+            r2_list = RouteStop.objects.filter(stop=end_stop)
 
-        valid_routes = []
-        direction_map = {}
+            for r1 in r1_list:
+                for r2 in r2_list:
+                    if r1.route == r2.route:
+                        continue
+                    
+                    common_x = RouteStop.objects.filter(
+                        route=r1.route, order__gt=r1.order
+                    ).values_list('stop', flat=True)
 
-        for r in candidate_routes:
-            stop_ids = route_stops_map.get(r.id, [])
-            if start_stop.id not in stop_ids or end_stop.id not in stop_ids:
-                continue
+                    transfers = RouteStop.objects.filter(
+                        route=r2.route, stop_id__in=common_x, order__lt=r2.order
+                    ).select_related('stop')
 
-            i = stop_ids.index(start_stop.id)
-            j = stop_ids.index(end_stop.id)
-
-            if i < j:
-                valid_routes.append(r)
-                direction_map[r.id] = "tam"
-            elif j < i:
-                valid_routes.append(r)
-                direction_map[r.id] = "späť"
-
-        trips = Trip.objects.filter(route__in=valid_routes).select_related("route", "vehicleID").order_by("departure_time")
-
-        for t in trips:
-            stop_ids = route_stops_map.get(t.route_id, [])
-            i = stop_ids.index(start_stop.id)
-            j = stop_ids.index(end_stop.id)
-            segment_ids = stop_ids[i:j+1] if i < j else stop_ids[j:i+1][::-1]
-            stop_name_by_id = {s.id: s.name for s in Stop.objects.filter(id__in=segment_ids)}
-            ordered_names = [stop_name_by_id[sid] for sid in segment_ids]
-
-            connections.append({
-                "trip": t,
-                "route": t.route,
-                "vehicle": t.vehicleID,
-                "direction": direction_map.get(t.route_id, ""),
-                "segment": ordered_names,
-            })
+                    for x in transfers:
+                        key = (r1.route.id, x.stop.id, r2.route.id)
+                        if key not in seen_transfers:
+                            transfer_connections.append({
+                                "stop_x": x.stop,
+                                "route1": r1.route,
+                                "route2": r2.route,
+                            })
+                            seen_transfers.add(key)
 
     return render(request, "search_connections.html", {
         "stops": stops,
-        "connections": connections,
-        "start_id": start_id,
-        "end_id": end_id,
+        "direct_connections": direct_connections,
+        "transfer_connections": transfer_connections,
         "start_stop": start_stop,
         "end_stop": end_stop,
     })
+"""
+def search_connections(request):
+    stops = Stop.objects.all().order_by("name")
+    start_id = request.GET.get("start_stop")
+    end_id = request.GET.get("end_stop")
 
+    direct_connections = []
+    transfer_connections = []
+    start_stop = None
+    end_stop = None
+
+    if start_id and end_id and start_id != end_id:
+        start_stop = get_object_or_404(Stop, pk=start_id)
+        end_stop = get_object_or_404(Stop, pk=end_id)
+
+        # --- 1. PRIAME SPOJE (bez duplicit) ---
+        start_rss = RouteStop.objects.filter(stop=start_stop)
+        seen_direct_trips = set()
+
+        for s_rs in start_rss:
+            valid_ends = RouteStop.objects.filter(
+                route=s_rs.route,
+                stop=end_stop,
+                order__gt=s_rs.order
+            )
+
+            if valid_ends.exists():
+                trips = Trip.objects.filter(route=s_rs.route).select_related('vehicleID')
+                for t in trips:
+                    trip_key = (t.route_id, t.departure_time)
+                    if trip_key not in seen_direct_trips:
+                        direct_connections.append({
+                            "route": s_rs.route,
+                            "trip": t,
+                            "departure": t.departure_time,
+                            "arrival": t.arrival_time,
+                            "vehicle": t.vehicleID,
+                        })
+                        seen_direct_trips.add(trip_key)
+
+        # --- 2. PRESTUPY (len ak nie je priamy spoj) ---
+        if not direct_connections:
+            seen_transfers = set()
+
+            routes_from_start = RouteStop.objects.filter(stop=start_stop)
+            routes_to_end = RouteStop.objects.filter(stop=end_stop)
+
+            for r1 in routes_from_start:
+                for r2 in routes_to_end:
+                    if r1.route == r2.route:
+                        continue
+
+                    common_stops = RouteStop.objects.filter(
+                        route=r1.route,
+                        order__gt=r1.order
+                    ).values_list('stop', flat=True)
+
+                    transfers = RouteStop.objects.filter(
+                        route=r2.route,
+                        stop_id__in=common_stops,
+                        order__lt=r2.order
+                    ).select_related('stop')
+
+                    for x in transfers:
+                        transfer_key = (r1.route.id, x.stop.id, r2.route.id)
+                        if transfer_key not in seen_transfers:
+                            transfer_connections.append({
+                                "stop_x": x.stop,
+                                "route1": r1.route,
+                                "route2": r2.route,
+                            })
+                            seen_transfers.add(transfer_key)
+
+    return render(request, "search_connections.html", {
+        "stops": stops,
+        "direct_connections": direct_connections,
+        "transfer_connections": transfer_connections[:10],
+        "start_id": start_id,
+        "end_id": end_id,
+    })
+"""
 @admin_required
 def route_stops_manage(request, route_id):
     route = get_object_or_404(Route, pk=route_id)
@@ -355,25 +443,21 @@ def route_stops_manage(request, route_id):
             messages.error(request, "Vyber zastávku.")
             return redirect("frontend:route_stops_manage", route_id=route.id)
 
-        if not order:
-            max_order = RouteStop.objects.filter(route=route).aggregate(Max("order"))["order__max"] or 0
-            order = max_order + 1
+        with transaction.atomic():
+            if not order:
+                max_order = RouteStop.objects.filter(route=route).aggregate(Max("order"))["order__max"] or 0
+                new_order = max_order + 1
+            else:
+                try:
+                    new_order = int(order)
+                    RouteStop.objects.filter(route=route, order__gte=new_order).update(order=F('order') + 1)
+                except ValueError:
+                    messages.error(request, "Poradie musí byť číslo.")
+                    return redirect("frontend:route_stops_manage", route_id=route.id)
 
-        try:
-            order = int(order)
-        except ValueError:
-            messages.error(request, "Poradie musí byť číslo.")
-            return redirect("frontend:route_stops_manage", route_id=route.id)
-
-        if RouteStop.objects.filter(route=route, stop_id=stop_id).exists():
-            messages.error(request, "Táto zastávka už na linke existuje.")
-            return redirect("frontend:route_stops_manage", route_id=route.id)
-
-        if RouteStop.objects.filter(route=route, order=order).exists():
-            messages.error(request, f"Poradie {order} je už použité. Zvoľ iné.")
-            return redirect("frontend:route_stops_manage", route_id=route.id)
-
-        RouteStop.objects.create(route=route, stop_id=stop_id, order=order)
+            RouteStop.objects.create(route=route, stop_id=stop_id, order=new_order)
+            _reorder_route_stops(route)
+            
         messages.success(request, "Zastávka pridaná do trasy.")
         return redirect("frontend:route_stops_manage", route_id=route.id)
 
@@ -384,9 +468,35 @@ def route_stops_manage(request, route_id):
     })
 
 @admin_required
+def route_stops_renumber(request, route_id):
+    """Renumber all stops in a route sequentially (1, 2, 3...)"""
+    route = get_object_or_404(Route, pk=route_id)
+    
+    with transaction.atomic():
+        route_stops = RouteStop.objects.filter(route=route).order_by("order")
+        for idx, rs in enumerate(route_stops, start=1):
+            rs.order = idx
+            rs.save()
+    
+    messages.success(request, "Poradie zastávok bolo prečíslované.")
+    return redirect("frontend:route_stops_manage", route_id=route.id)
+
+@admin_required
 def route_stop_delete(request, route_id, rs_id):
     route = get_object_or_404(Route, pk=route_id)
     rs = get_object_or_404(RouteStop, pk=rs_id, route=route)
     rs.delete()
+    
+    _reorder_route_stops(route)
+    
     messages.success(request, "Zastávka odstránená z trasy.")
     return redirect("frontend:route_stops_manage", route_id=route.id)
+
+def _reorder_route_stops(route):
+    """Pridelí poradie 1, 2, 3... všetkým zastávkam linky."""
+    with transaction.atomic():
+        stops = RouteStop.objects.filter(route=route).order_by('order', 'id')
+        for index, rs in enumerate(stops, start=1):
+            if rs.order != index:
+                rs.order = index
+                rs.save(update_fields=['order'])

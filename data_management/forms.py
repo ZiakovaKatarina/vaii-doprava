@@ -17,14 +17,15 @@ class StopForm(forms.ModelForm):
     def clean_name(self):
         name = self.cleaned_data.get('name', '').strip()
         
-        # Validácia: aspoň 5 znakov, písmená, čísla a medzery, aspoň jedno písmeno
         if len(name) < 5:
              raise ValidationError("Názov zastávky musí mať aspoň 5 znakov.")
         
-        if not re.match(r'^(?=.*[a-zA-ZáäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ])[a-zA-Z0-9 áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]{5,}$', name):
-            raise ValidationError("Názov musí obsahovať písmená alebo číslice a aspoň jedno písmeno.")
+        # TODO zjednotit obidva regexy, povolit speci znaky ako napr. zatvorky
+        reg = r'^[a-zA-Z0-9\s.,\-áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ.,]+$'
+        
+        if not re.match(reg, name):
+            raise ValidationError("Názov zastávky obsahuje nepovolené znaky (povolené sú písmená, čísla, medzery, pomlčky, bodky a čiarky).")
 
-        # Kontrola unikátnosti (case-insensitive)
         qs = Stop.objects.filter(name__iexact=name)
         if self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
@@ -52,7 +53,6 @@ class RouteForm(forms.ModelForm):
 class TripForm(forms.ModelForm):
     class Meta:
         model = Trip
-        # Opravené názvy polí podľa modelu v data_management/models.py
         fields = ['route', 'vehicleID', 'departure_time', 'arrival_time']
         widgets = {
             'route': forms.Select(attrs={'class': 'form-input', 'required': True}),

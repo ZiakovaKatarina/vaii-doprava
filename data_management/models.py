@@ -76,9 +76,6 @@ class RouteStop(models.Model):
         verbose_name_plural = 'Zastávky na linke'
         ordering = ['order']
         unique_together = ('route', 'order')
-        constraints = [
-            models.UniqueConstraint(fields=['route', 'stop'], name='unique_stop_per_route')
-        ]
 
     def __str__(self):
         return f"{self.route.name}: {self.order}. {self.stop.name}"

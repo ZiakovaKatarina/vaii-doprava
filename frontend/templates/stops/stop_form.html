@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     name.addEventListener('input', () => {
         const alertBox = getAlert(name);
         const nameValue = name.value.trim();
-        const regex = /^(?=.*[a-zA-ZáäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ])[a-zA-Z0-9 áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]{5,}$/;
+        const regex = /^(?=.*[a-zA-ZáäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ.,()])[a-zA-Z0-9 áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ.,()]{5,}$/;
 
         if (nameValue === "") {
             name.setCustomValidity("Názov je povinný.");
@@ -88,8 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
             alertBox.style.display = "none";
         }
     });
-
-    // ODSTRÁNENÝ duplicitný submit handler (je už v ajax-forms.js)
 });
 </script>
 {% endblock %}

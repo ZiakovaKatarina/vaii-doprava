@@ -1,59 +1,60 @@
 {% extends "base.html" %}
+
 {% block content %}
+<h2>Správa zastávok - Linka {{ route.name }}</h2>
 
-<h2>Trasa linky: {{ route.name }}</h2>
-<p><strong>Start:</strong> {{ route.start_stop.name }} | <strong>Koniec:</strong> {{ route.end_stop.name }}</p>
+<div style="margin-bottom: 20px; display: flex; gap: 10px;">
+    <a href="{% url 'frontend:route_list' %}" class="btn btn-secondary">← Späť na linky</a>
+</div>
 
-{% if messages %}
-  <ul>
-    {% for m in messages %}
-      <li>{{ m }}</li>
-    {% endfor %}
-  </ul>
-{% endif %}
-
-<table class="table">
-  <thead>
-    <tr>
-      <th>Poradie</th>
-      <th>Zastávka</th>
-      <th>Akcie</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for rs in route_stops %}
-      <tr>
-        <td>{{ rs.order }}</td>
-        <td>{{ rs.stop.name }}</td>
-        <td>
-          <a class="btn btn-danger" href="{% url 'frontend:route_stop_delete' route.id rs.id %}">Zmazať</a>
-        </td>
-      </tr>
-    {% empty %}
-      <tr><td colspan="3">Trasa je prázdna.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<h3>Pridať zastávku do trasy</h3>
-<form method="post">
-  {% csrf_token %}
-  <label>Zastávka</label>
-  <select name="stop" required>
-    <option value="">-- vyber --</option>
-    {% for s in stops %}
-      <option value="{{ s.id }}">{{ s.name }}</option>
-    {% endfor %}
-  </select>
-
-  <label>Poradie (voliteľné)</label>
-  <input type="number" name="order" min="1" placeholder="ak necháš prázdne, dá sa na koniec">
-
-  <button class="btn btn-primary" type="submit">Pridať</button>
+<form method="post" style="margin-bottom: 30px; padding: 15px; background: #f5f5f5; border-radius: 4px;">
+    {% csrf_token %}
+    <h3>Pridať zastávku</h3>
+    
+    <label for="stop">Zastávka:</label>
+    <select name="stop" id="stop" required>
+        <option value="">-- vyber zastávku --</option>
+        {% for s in stops %}
+            <option value="{{ s.id }}">{{ s.name }}</option>
+        {% endfor %}
+    </select>
+    
+    <label for="order" style="margin-left: 15px;">Poradie (voliteľné):</label>
+    <input type="number" name="order" id="order" min="1" placeholder="Ak ponechaš prázdne, bude na konci">
+    
+    <button type="submit" class="btn btn-primary" style="margin-left: 15px;">Pridať</button>
 </form>
 
-<p style="margin-top:12px;">
-  <a class="btn btn-secondary" href="{% url 'frontend:route_list' %}">Späť na linky</a>
-</p>
+{% if route_stops %}
+    <h3>Zastávky na linke ({{ route_stops.count }})</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Poradie</th>
+                <th>Názov zastávky</th>
+                <th>Zemepisné súradnice</th>
+                <th>Akcie</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rs in route_stops %}
+                <tr>
+                    <td><strong>{{ rs.order }}</strong></td>
+                    <td>{{ rs.stop.name }}</td>
+                    <td>{{ rs.stop.latitude }}, {{ rs.stop.longitude }}</td>
+                    <td>
+                        <a href="{% url 'frontend:route_stop_delete' route.id rs.id %}" 
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('Naozaj chcete odstrániť túto zastávku z trasy?')">
+                            ✕ Odstrániť
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p style="color: #999;">Zatiaľ žiadne zastávky na tejto linke (okrem štartu a cieľa).</p>
+{% endif %}
 
 {% endblock %}
