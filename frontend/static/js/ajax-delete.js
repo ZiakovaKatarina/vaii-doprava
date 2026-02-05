@@ -1,11 +1,12 @@
 (function() {
   'use strict';
 
-  // Predpokladáme, že loadStops je globálne dostupná funkcia
   document.addEventListener('click', async (e) => {
     if (e.target.classList.contains('btn-delete-ajax')) {
       e.preventDefault();
-      if (!confirm('Naozaj chcete zmazať túto zastávku?')) return;
+      
+      const stopName = e.target.closest('tr').querySelector('td').textContent;
+      if (!confirm(`Naozaj chcete zmazať zastávku "${stopName}"?`)) return;
 
       const url = e.target.getAttribute('href');
       const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
@@ -18,18 +19,19 @@
             'X-Requested-With': 'XMLHttpRequest'
           }
         });
+
         const data = await res.json();
-        if (data.ok) {
+
+        if (res.ok && data.ok) {
           alert('✅ Zastávka bola zmazaná');
-          // Namiesto reloadu zavolaj loadStops()
           if (typeof window.loadStops === 'function') {
             window.loadStops();
           }
         } else {
-          alert('❌ Chyba: ' + (data.error || 'Nepodarilo sa zmazať'));
+          alert('❌ ' + (data.error || 'Zastávku nie je možné zmazať.'));
         }
       } catch (err) {
-        alert('❌ Chyba: ' + err.message);
+        alert('❌ Systémová chyba pri komunikácii so serverom.');
       }
     }
   });

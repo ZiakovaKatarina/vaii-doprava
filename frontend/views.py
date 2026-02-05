@@ -7,6 +7,7 @@ from django.db.models import Q, Max
 from django.views.decorators.http import require_http_methods, require_GET
 from users.decorators import admin_required
 from django.contrib import messages
+from django.db.models import ProtectedError
 import json
 
 from data_management.models import Stop, Trip, Route, Vehicle, RouteStop
@@ -71,10 +72,17 @@ def stop_update(request, pk):
 @require_http_methods(["DELETE", "POST"])
 def stop_delete(request, pk):
     try:
-        stop = Stop.objects.get(pk=pk)
+        stop = get_object_or_404(Stop, pk=pk)
         stop.delete()
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'ok': True})
+        messages.success(request, "Zastávka bola úspešne zmazaná.")
+        return redirect('frontend:stop_list')
+    except ProtectedError:
+        error_msg = "Túto zastávku nie je možné zmazať, pretože je súčasťou jednej alebo viacerých trás (liniek). Najskôr ju odstráňte z trasy."
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'ok': False, 'error': error_msg}, status=400)
+        messages.error(request, error_msg)
         return redirect('frontend:stop_list')
     except Stop.DoesNotExist:
         return JsonResponse({'ok': False, 'error': 'Zastávka neexistuje'}, status=404)
