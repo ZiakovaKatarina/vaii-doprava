@@ -65,3 +65,20 @@ class Trip(models.Model):
         verbose_name = 'Spoj'
         verbose_name_plural = 'Spoje'
         ordering = ['departure_time']
+
+class RouteStop(models.Model):
+    route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name='route_stops', verbose_name='Linka')
+    stop = models.ForeignKey(Stop, on_delete=models.PROTECT, verbose_name='Zastávka')
+    order = models.PositiveIntegerField(verbose_name='Poradie')
+
+    class Meta:
+        verbose_name = 'Zastávka na linke'
+        verbose_name_plural = 'Zastávky na linke'
+        ordering = ['order']
+        unique_together = ('route', 'order')
+        constraints = [
+            models.UniqueConstraint(fields=['route', 'stop'], name='unique_stop_per_route')
+        ]
+
+    def __str__(self):
+        return f"{self.route.name}: {self.order}. {self.stop.name}"

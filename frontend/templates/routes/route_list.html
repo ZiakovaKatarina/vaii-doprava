@@ -24,6 +24,7 @@
                         <td>
                             <a href="{% url 'frontend:route_update' route.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
                             <a href="{% url 'frontend:route_delete' route.pk %}" class="btn btn-sm btn-danger">Zmazať</a>
+                            <a class="btn btn-secondary" href="{% url 'frontend:route_stops_manage' route.id %}">Trasa</a>
                         </td>
                     </tr>
                 {% empty %}

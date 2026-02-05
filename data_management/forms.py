@@ -1,85 +1,73 @@
 from django import forms
-from .models import Trip
-from .models import Route
-from .models import Stop
-from .models import Vehicle
+from .models import Stop, Route, Trip, Vehicle
 import re
+from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
 
 class StopForm(forms.ModelForm):
     class Meta:
         model = Stop
         fields = ['name', 'latitude', 'longitude']
-        labels = {
-            'name': 'Názov zastávky',
-            'latitude': 'Zemepisná šírka',
-            'longitude': 'Zemepisná dĺžka',
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-input', 'required': True}),
+            'latitude': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.000001', 'min': -90, 'max': 90}),
+            'longitude': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.000001', 'min': -180, 'max': 180}),
         }
 
-    def clean(self):
-        cleaned_data = super().clean()
-        name = cleaned_data.get('name')
-
-        if not name:
-            return cleaned_data
+    def clean_name(self):
+        name = self.cleaned_data.get('name', '').strip()
         
-        name = name.strip()
-        cleaned_data['name'] = name
+        # Validácia: aspoň 5 znakov, písmená, čísla a medzery, aspoň jedno písmeno
+        if len(name) < 5:
+             raise ValidationError("Názov zastávky musí mať aspoň 5 znakov.")
+        
+        if not re.match(r'^(?=.*[a-zA-ZáäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ])[a-zA-Z0-9 áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]{5,}$', name):
+            raise ValidationError("Názov musí obsahovať písmená alebo číslice a aspoň jedno písmeno.")
 
-        reg = r'^[a-zA-Z0-9\s-]+$'
-        if not re.match(reg, name):
-            self.add_error('name', 'Názov zastávky môže obsahovať iba písmená, čísla, medzery a pomlčky.')
-
-        if len(name) < 4 or len(name) > 100:
-            self.add_error('name', 'Názov zastávky nemá požadovanú veľkosť (od 4 do 100)')
-
-        return cleaned_data
+        # Kontrola unikátnosti (case-insensitive)
+        qs = Stop.objects.filter(name__iexact=name)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise ValidationError("Zastávka s týmto názvom už existuje.")
+            
+        return name
 
 class RouteForm(forms.ModelForm):
     class Meta:
         model = Route
         fields = ['name', 'start_stop', 'end_stop']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-input', 'required': True}),
+            'start_stop': forms.Select(attrs={'class': 'form-input'}),
+            'end_stop': forms.Select(attrs={'class': 'form-input'}),
+        }
 
-    def clean(self):
-        cleaned_data = super().clean()
-        name = cleaned_data.get('name')
-
-        if not name:
-            return cleaned_data
-
-        name = name.strip()
-        cleaned_data['name'] = name
-
-        reg = r'^[a-zA-Z0-9\s-]+$'
-        if not re.match(reg, name):
-            self.add_error('name', 'Názov linky môže obsahovať iba písmená, čísla, medzery a pomlčky.')
-
-        if len(name) < 4 or len(name) > 100:
-            self.add_error('name', 'Názov linky nemá požadovanú veľkosť (od 4 do 100)')
-
-        return cleaned_data
+    def clean_name(self):
+        name = self.cleaned_data.get('name', '').strip()
+        if len(name) < 4:
+            raise ValidationError("Názov linky musí mať aspoň 4 znaky.")
+        return name
 
 class TripForm(forms.ModelForm):
     class Meta:
         model = Trip
-        fields = ['route', 'departure_time', 'arrival_time', 'vehicleID']
+        # Opravené názvy polí podľa modelu v data_management/models.py
+        fields = ['route', 'vehicleID', 'departure_time', 'arrival_time']
         widgets = {
-            'departure_time': forms.TimeInput(attrs={'type': 'time'}),
-            'arrival_time': forms.TimeInput(attrs={'type': 'time'}),
+            'route': forms.Select(attrs={'class': 'form-input', 'required': True}),
+            'vehicleID': forms.Select(attrs={'class': 'form-input'}),
+            'departure_time': forms.TimeInput(attrs={'class': 'form-input', 'type': 'time'}, format='%H:%M'),
+            'arrival_time': forms.TimeInput(attrs={'class': 'form-input', 'type': 'time'}, format='%H:%M'),
         }
 
     def clean(self):
         cleaned_data = super().clean()
-        start_stop = cleaned_data.get('start_stop')
-        end_stop = cleaned_data.get('end_stop')
-        departure_time = cleaned_data.get('departure_time')
-        arrival_time = cleaned_data.get('arrival_time')
+        dep = cleaned_data.get('departure_time')
+        arr = cleaned_data.get('arrival_time')
 
-        if start_stop and end_stop and start_stop == end_stop:
-            self.add_error('end_stop', "Začiatočná a koncová zastávka nemôžu byť rovnaké.")
-
-        if departure_time and arrival_time and departure_time >= arrival_time:
-            self.add_error('arrival_time', "Čas príchodu musí byť neskôr ako čas odchodu.")
-
+        if dep and arr and dep >= arr:
+            raise ValidationError({'arrival_time': "Čas príchodu musí byť neskôr ako čas odchodu."})
         return cleaned_data
 
 class VehicleForm(forms.ModelForm):
@@ -87,6 +75,10 @@ class VehicleForm(forms.ModelForm):
         model = Vehicle
         fields = ['registration_number', 'vehicle_type', 'capacity']
         widgets = {
-            'registration_number': forms.TextInput(attrs={'placeholder': 'ŠPZ'}),
-            'capacity': forms.NumberInput(attrs={'min': 1}),
+            'registration_number': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'napr. ZA-123AB'}),
+            'vehicle_type': forms.Select(attrs={'class': 'form-input'}),
+            'capacity': forms.NumberInput(attrs={'class': 'form-input', 'min': 1}),
         }
+
+    def clean_registration_number(self):
+        return self.cleaned_data.get('registration_number', '').upper()

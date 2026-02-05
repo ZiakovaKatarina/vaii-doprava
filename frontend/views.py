@@ -3,12 +3,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.views.decorators.http import require_http_methods, require_GET
 from users.decorators import admin_required
+from django.contrib import messages
 import json
 
-from data_management.models import Stop, Trip, Route, Vehicle
+from data_management.models import Stop, Trip, Route, Vehicle, RouteStop
 from data_management.forms import StopForm, TripForm, RouteForm, VehicleForm
 
 def home(request):
@@ -37,11 +38,10 @@ def stop_create(request):
         form = StopForm(request.POST)
         if form.is_valid():
             form.save()
-            # AJAX response
             return JsonResponse({'ok': True, 'redirect': '/stops/'})
         else:
-            # AJAX error response
-            return JsonResponse({'ok': False, 'errors': str(form.errors)}, status=400)
+            error_text = " ".join([error for field in form.errors for error in form.errors[field]])
+            return JsonResponse({'ok': False, 'errors': error_text}, status=400)
     else:
         form = StopForm()
     return render(request, 'stops/stop_form.html', {'form': form, 'title': 'Pridať zastávku'})
@@ -50,13 +50,22 @@ def stop_create(request):
 def stop_update(request, pk):
     stop = get_object_or_404(Stop, pk=pk)
     if request.method == "POST":
+        if not request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'ok': False, 'error': 'Update je povolený len cez AJAX.'}, status=403)
         form = StopForm(request.POST, instance=stop)
         if form.is_valid():
             form.save()
-            return redirect('frontend:stop_list')
+            return JsonResponse({'ok': True, 'redirect': '/stops/'})
+        else:
+            error_text = " ".join([error for field in form.errors for error in form.errors[field]])
+            return JsonResponse({'ok': False, 'errors': error_text}, status=400)
     else:
         form = StopForm(instance=stop)
-    return render(request, 'stops/stop_form.html', {'form': form, 'title': 'Upraviť zastávku'})
+    return render(request, 'stops/stop_form.html', {
+        'form': form,
+        'stop': stop,
+        'title': 'Upraviť zastávku'
+    })
 
 @admin_required
 @require_http_methods(["DELETE", "POST"])
@@ -74,21 +83,37 @@ def stop_delete(request, pk):
 @login_required
 def stop_update_inline(request, pk):
     if not (request.user.is_staff or request.user.is_superuser):
-        return JsonResponse({'ok': False, 'error': 'Forbidden'}, status=403)
+        return JsonResponse({'detail': 'Forbidden'}, status=403)
     
     stop = get_object_or_404(Stop, pk=pk)
+    import json
     try:
-        data = json.loads(request.body)
+        data = json.loads(request.body or '{}')
     except json.JSONDecodeError:
-        return JsonResponse({'ok': False, 'error': 'Invalid JSON'}, status=400)
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
     
+    updated = False
     if 'name' in data:
-        stop.name = data['name'][:100]
-    if 'location' in data:
-        stop.location = data['location'][:200]
+        stop.name = data['name']
+        updated = True
+    if 'latitude' in data:
+        try:
+            stop.latitude = float(data['latitude'])
+            updated = True
+        except ValueError:
+            return JsonResponse({'error': 'Neplatná hodnota latitude'}, status=400)
+    if 'longitude' in data:
+        try:
+            stop.longitude = float(data['longitude'])
+            updated = True
+        except ValueError:
+            return JsonResponse({'error': 'Neplatná hodnota longitude'}, status=400)
     
-    stop.save()
-    return JsonResponse({'ok': True})
+    if updated:
+        stop.save()
+        return JsonResponse({'ok': True})
+    else:
+        return JsonResponse({'error': 'Žiadne zmeny'}, status=400)
 
 @require_GET
 def stops_api(request):
@@ -169,7 +194,11 @@ def route_create(request):
     if request.method == "POST":
         form = RouteForm(request.POST)
         if form.is_valid():
-            form.save()
+            route = form.save()
+            
+            RouteStop.objects.get_or_create(route=route, stop=route.start_stop, defaults={"order": 1})
+            RouteStop.objects.get_or_create(route=route, stop=route.end_stop, defaults={"order": 2})
+            
             return redirect('frontend:route_list')
     else:
         form = RouteForm()
@@ -232,10 +261,13 @@ def vehicle_delete(request, pk):
     return render(request, 'vehicles/vehicle_confirm_delete.html', {'vehicle': vehicle})
 
 # Connections
+from django.db.models import Prefetch
+from data_management.models import RouteStop
+
 def search_connections(request):
-    stops = Stop.objects.all().order_by('name')
-    start_id = request.GET.get('start_stop')
-    end_id = request.GET.get('end_stop')
+    stops = Stop.objects.all().order_by("name")
+    start_id = request.GET.get("start_stop")
+    end_id = request.GET.get("end_stop")
 
     connections = []
     start_stop = None
@@ -245,20 +277,51 @@ def search_connections(request):
         start_stop = get_object_or_404(Stop, pk=start_id)
         end_stop = get_object_or_404(Stop, pk=end_id)
 
-        routes = Route.objects.filter(
-            Q(start_stop=start_stop, end_stop=end_stop) |
-            Q(start_stop=end_stop, end_stop=start_stop)
-        )
+        candidate_routes = Route.objects.filter(
+            route_stops__stop=start_stop,
+        ).filter(
+            route_stops__stop=end_stop
+        ).distinct()
 
-        trips = Trip.objects.filter(route__in=routes).select_related('route', 'vehicleID').order_by('departure_time')
+        route_stops_map = {}
+        rs_qs = RouteStop.objects.filter(route__in=candidate_routes).select_related("stop").order_by("route_id", "order")
+        for rs in rs_qs:
+            route_stops_map.setdefault(rs.route_id, []).append(rs.stop_id)
+
+        valid_routes = []
+        direction_map = {}
+
+        for r in candidate_routes:
+            stop_ids = route_stops_map.get(r.id, [])
+            if start_stop.id not in stop_ids or end_stop.id not in stop_ids:
+                continue
+
+            i = stop_ids.index(start_stop.id)
+            j = stop_ids.index(end_stop.id)
+
+            if i < j:
+                valid_routes.append(r)
+                direction_map[r.id] = "tam"
+            elif j < i:
+                valid_routes.append(r)
+                direction_map[r.id] = "späť"
+
+        trips = Trip.objects.filter(route__in=valid_routes).select_related("route", "vehicleID").order_by("departure_time")
 
         for t in trips:
-            direction = "tam" if (t.route.start_stop_id == start_stop.id and t.route.end_stop_id == end_stop.id) else "späť"
+            stop_ids = route_stops_map.get(t.route_id, [])
+            i = stop_ids.index(start_stop.id)
+            j = stop_ids.index(end_stop.id)
+            segment_ids = stop_ids[i:j+1] if i < j else stop_ids[j:i+1][::-1]
+            stop_name_by_id = {s.id: s.name for s in Stop.objects.filter(id__in=segment_ids)}
+            ordered_names = [stop_name_by_id[sid] for sid in segment_ids]
+
             connections.append({
                 "trip": t,
                 "route": t.route,
                 "vehicle": t.vehicleID,
-                "direction": direction,
+                "direction": direction_map.get(t.route_id, ""),
+                "segment": ordered_names,
             })
 
     return render(request, "search_connections.html", {
@@ -269,3 +332,53 @@ def search_connections(request):
         "start_stop": start_stop,
         "end_stop": end_stop,
     })
+
+@admin_required
+def route_stops_manage(request, route_id):
+    route = get_object_or_404(Route, pk=route_id)
+    route_stops = RouteStop.objects.filter(route=route).select_related("stop").order_by("order")
+    stops = Stop.objects.all().order_by("name")
+
+    if request.method == "POST":
+        stop_id = request.POST.get("stop")
+        order = request.POST.get("order")
+
+        if not stop_id:
+            messages.error(request, "Vyber zastávku.")
+            return redirect("frontend:route_stops_manage", route_id=route.id)
+
+        if not order:
+            max_order = RouteStop.objects.filter(route=route).aggregate(Max("order"))["order__max"] or 0
+            order = max_order + 1
+
+        try:
+            order = int(order)
+        except ValueError:
+            messages.error(request, "Poradie musí byť číslo.")
+            return redirect("frontend:route_stops_manage", route_id=route.id)
+
+        if RouteStop.objects.filter(route=route, stop_id=stop_id).exists():
+            messages.error(request, "Táto zastávka už na linke existuje.")
+            return redirect("frontend:route_stops_manage", route_id=route.id)
+
+        if RouteStop.objects.filter(route=route, order=order).exists():
+            messages.error(request, f"Poradie {order} je už použité. Zvoľ iné.")
+            return redirect("frontend:route_stops_manage", route_id=route.id)
+
+        RouteStop.objects.create(route=route, stop_id=stop_id, order=order)
+        messages.success(request, "Zastávka pridaná do trasy.")
+        return redirect("frontend:route_stops_manage", route_id=route.id)
+
+    return render(request, "routes/route_stops_manage.html", {
+        "route": route,
+        "route_stops": route_stops,
+        "stops": stops,
+    })
+
+@admin_required
+def route_stop_delete(request, route_id, rs_id):
+    route = get_object_or_404(Route, pk=route_id)
+    rs = get_object_or_404(RouteStop, pk=rs_id, route=route)
+    rs.delete()
+    messages.success(request, "Zastávka odstránená z trasy.")
+    return redirect("frontend:route_stops_manage", route_id=route.id)

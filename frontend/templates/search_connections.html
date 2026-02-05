@@ -54,6 +54,9 @@
               {% endif %}
             </td>
           </tr>
+          {% if c.segment %}
+            <div>Trasa: {{ c.segment|join:" → " }}</div>
+          {% endif %}
         {% endfor %}
       </tbody>
     </table>

@@ -25,7 +25,13 @@ urlpatterns = [
     path('routes/create/', views.route_create, name='route_create'),
     path('routes/<int:pk>/update/', views.route_update, name='route_update'),
     path('routes/<int:pk>/delete/', views.route_delete, name='route_delete'),
-    
+    path(
+        "routes/<int:route_id>/stops/",
+        views.route_stops_manage,
+        name="route_stops_manage",
+    ),
+    path("routes/<int:route_id>/stops/<int:rs_id>/delete/", views.route_stop_delete, name="route_stop_delete"),
+
     # Vehicles
     path('vehicles/', views.vehicle_list, name='vehicle_list'),
     path('vehicles/create/', views.vehicle_create, name='vehicle_create'),

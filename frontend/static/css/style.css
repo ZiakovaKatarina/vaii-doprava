@@ -370,3 +370,12 @@ footer p {
         width: 95%;
     }
 }
+
+/* 21. ERROR BOX */
+.error-box {
+    color: #b00020;
+    background: #fdecea;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
