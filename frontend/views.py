@@ -138,22 +138,36 @@ def stop_list(request):
 
 @admin_required
 def stop_create(request):
+    stops = Stop.objects.all()
     if request.method == "POST":
         form = StopForm(request.POST)
         if form.is_valid():
             form.save()
-            return JsonResponse({'ok': True, 'redirect': '/stops/'})
+            
+            # KONTROLA: Ak je to AJAX, pošli JSON. Ak nie, urob redirect.
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'ok': True, 'redirect': reverse('frontend:stop_list')})
+            
+            messages.success(request, "Zastávka bola vytvorená.")
+            return redirect('frontend:stop_list')
         else:
-            error_text = " ".join([error for field in form.errors for error in form.errors[field]])
-            return JsonResponse({'ok': False, 'errors': error_text}, status=400)
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                error_text = " ".join([error for field in form.errors for error in form.errors[field]])
+                return JsonResponse({'ok': False, 'errors': error_text}, status=400)
     else:
         form = StopForm()
-    return render(request, 'stops/stop_form.html', {'form': form, 'title': 'Pridať zastávku'})
+    
+    return render(request, 'stops/stop_form.html', {
+        'form': form, 
+        'title': 'Pridať zastávku',
+        'stops': stops
+    })
 
 @admin_required
 def stop_update(request, pk):
     stop = get_object_or_404(Stop, pk=pk)
-    
+    stops = Stop.objects.all()
+
     is_ajax = (request.headers.get('x-requested-with') == 'XMLHttpRequest' or 
                request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest')
 
@@ -186,7 +200,8 @@ def stop_update(request, pk):
     return render(request, 'stops/stop_form.html', {
         'form': form,
         'stop': stop,
-        'title': 'Upraviť zastávku'
+        'title': 'Upraviť zastávku',
+        'stops': stops
     })
 
 @admin_required
@@ -227,16 +242,13 @@ def stop_update_inline(request, pk):
             
         stop.full_clean()
         stop.save()
-        
         return JsonResponse({'ok': True})
 
     except ValidationError as e:
-        error_msg = str(e.messages[0]) if e.messages else str(e)
-        return JsonResponse({'error': error_msg}, status=400)
-    except ValueError:
-        return JsonResponse({'error': 'Neplatný formát čísla.'}, status=400)
+        msg = e.message_dict if hasattr(e, 'message_dict') else str(e)
+        return JsonResponse({'error': msg}, status=400)
     except Exception as e:
-        return JsonResponse({'error': f'Chyba: {str(e)}'}, status=500)
+        return JsonResponse({'error': 'Neplatné dáta.'}, status=400)
 
 @require_GET
 def stops_api(request):

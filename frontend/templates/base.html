@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Verejná Doprava{% endblock %}</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
 </head>
@@ -87,76 +94,10 @@
     </footer>
 
     <script>
-        /*
-document.addEventListener('DOMContentLoaded', function () {
-    console.log("Inicializácia skriptov pre projekt Verejná Doprava...");
-
-    // --- 1. LOGIKA PRE DROPDOWN MENU (Data a Administratíva) ---
-    function setupDropdown(toggleId, menuId) {
-        const toggle = document.getElementById(toggleId);
-        const menu = document.getElementById(menuId);
-
-        if (toggle && menu) {
-            toggle.addEventListener('click', function (e) {
-                e.stopPropagation();
-                const isOpen = menu.classList.toggle('active');
-                // Zmena šípky v texte
-                this.innerHTML = this.innerHTML.includes('▼') ? 
-                                 this.innerHTML.replace('▼', '▲') : 
-                                 this.innerHTML.replace('▲', '▼');
-            });
-        }
-    }
-
-    // Inicializujeme oba dropdowny, ak existujú
-    setupDropdown('data-toggle', 'data-menu');
-    setupDropdown('admin-toggle', 'admin-menu');
-
-    // Zatvorenie všetkých dropdownov pri kliknutí mimo nich
-    document.addEventListener('click', function (e) {
-        document.querySelectorAll('.dropdown').forEach(dropdown => {
-            if (!dropdown.contains(e.target)) {
-                dropdown.classList.remove('active');
-                const toggle = dropdown.querySelector('.nav-link');
-                if (toggle) toggle.innerHTML = toggle.innerHTML.replace('▲', '▼');
-            }
-        });
-    });
-
-    // --- 2. POTVRDENIE MAZANIA (Data Integrity Protection) ---
-    // Tento skript automaticky zachytí všetky tlačidlá s textom "Zmazať"
-    const allButtons = document.querySelectorAll('.btn-outline, .btn');
-    
-    allButtons.forEach(button => {
-        if (button.textContent.trim().toLowerCase().includes('zmazať')) {
-            button.addEventListener('click', function (e) {
-                const confirmMessage = "Naozaj chcete tento záznam odstrániť? Akcia je nevratná.";
-                if (!confirm(confirmMessage)) {
-                    e.preventDefault(); // Zruší akciu (neprejde na URL mazania)
-                    console.log("Mazanie bolo zrušené používateľom.");
-                } else {
-                    console.log("Používateľ potvrdil zmazanie záznamu.");
-                }
-            });
-        }
-    });
-
-    // --- 3. RESPONSIVE MENU HIGHLIGHT ---
-    // Zvýrazní odkaz v menu, na ktorom sa práve nachádzame
-    const currentPath = window.location.pathname;
-    document.querySelectorAll('nav a').forEach(link => {
-        if (link.getAttribute('href') === currentPath && currentPath !== '/') {
-            link.style.color = '#ffcc00'; // Žlté zvýraznenie aktívnej stránky
-            link.style.fontWeight = 'bold';
-        }
-    });
-});
-*/
-
 document.addEventListener('DOMContentLoaded', function () {
     const dropdown = document.getElementById('admin-dropdown');
     const toggle = document.getElementById('admin-toggle');
-    if (!dropdown || !toggle) return; // guard proti neexistujúcim ID
+    if (!dropdown || !toggle) return;
 
     function toggleDropdown() {
         const isActive = dropdown.classList.toggle('active');

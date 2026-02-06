@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 class Vehicle(models.Model):
     VEHICLE_TYPES = [
@@ -22,8 +23,14 @@ class Vehicle(models.Model):
 
 class Stop(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Názov zastávky')
-    latitude = models.FloatField(verbose_name='Zemepisná šírka')
-    longitude = models.FloatField(verbose_name='Zemepisná dĺžka')
+    latitude = models.FloatField(
+        verbose_name='Zemepisná šírka',
+        validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)]
+    )
+    longitude = models.FloatField(
+        verbose_name='Zemepisná dĺžka',
+        validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)]
+    )
     created_at = models.DateTimeField(default=timezone.now, verbose_name='Vytvorená')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Aktualizovaná')
     

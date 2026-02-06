@@ -3,6 +3,16 @@
 {% block content %}
 <h2>Vyhľadanie spojenia</h2>
 
+<div class="card">
+    <h3>Mapa zastávok</h3>
+    <div style="margin-bottom: 10px; position: relative;">
+        <input type="text" id="map-stop-search" placeholder="🔍 Rýchle hľadanie zastávky na mape..." 
+               style="width: 100%; padding: 10px; border: 2px solid #007bff; border-radius: 8px;">
+        <div id="map-search-results" style="position: absolute; width: 100%; background: white; z-index: 1000; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+    </div>
+    <div id="map" style="height: 400px; width: 100%; border-radius: 8px; z-index: 1;"></div>
+</div>
+
 <form method="get" action="{% url 'frontend:search_connections' %}" style="max-width: 700px;">
   <label>Odkiaľ</label>
   <select name="start_stop" required>
@@ -97,45 +107,130 @@
 {% endblock %}
 
 {% block extra_js %}
+<script id="stops-data" type="application/json">
+[
+    {% for s in stops %}
+        {% if s.latitude and s.longitude %}
+        {
+            "id": {{ s.id }},
+            "name": "{{ s.name|escapejs }}",
+            "lat": {{ s.latitude|stringformat:"f" }},
+            "lon": {{ s.longitude|stringformat:"f" }}
+        }{% if not forloop.last %},{% endif %}
+        {% endif %}
+    {% endfor %}
+]
+</script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    var map = L.map('map').setView([49.223, 18.740], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    var geocoder = L.Control.geocoder({
+        defaultMarkGeocode: false,
+        placeholder: "🔍 Hľadať adresu (ulicu, mesto)...",
+        errorMessage: "Adresa nebola nájdená."
+    })
+    .on('markgeocode', function(e) {
+        var bbox = e.geocode.bbox;
+        var poly = L.polygon([
+            bbox.getSouthEast(),
+            bbox.getNorthEast(),
+            bbox.getNorthWest(),
+            bbox.getSouthWest()
+        ]);
+        map.fitBounds(poly.getBounds());
+    })
+    .addTo(map);
+
+    var markerMap = {}; 
+    var stopsElement = document.getElementById('stops-data');
+
+    if (stopsElement) {
+        var stopsData = JSON.parse(stopsElement.textContent);
+        stopsData.forEach(function(s) {
+            var marker = L.marker([s.lat, s.lon]).addTo(map);
+            
+            var popupContent = `
+                <div style="text-align:center;">
+                    <b style="font-size:1.1rem;">${s.name}</b><br>
+                    <div style="display:flex; gap:5px; margin-top:8px;">
+                        <button onclick="setPoint(${s.id}, '${s.name.replace(/'/g, "\\'")}', 'start')" 
+                                style="cursor:pointer; background:#28a745; color:white; border:none; padding:5px 10px; border-radius:4px; flex:1;">
+                            Štart
+                        </button>
+                        <button onclick="setPoint(${s.id}, '${s.name.replace(/'/g, "\\'")}', 'end')" 
+                                style="cursor:pointer; background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; flex:1;">
+                            Cieľ
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent);
+            markerMap[s.name.toLowerCase()] = { marker: marker, lat: s.lat, lon: s.lon };
+        });
+    }
+
+    window.setPoint = function(id, name, type) {
+        var startSelect = document.querySelector('select[name="start_stop"]');
+        var endSelect = document.querySelector('select[name="end_stop"]');
+
+        if (type === 'start') {
+            if (endSelect.value == id) {
+                alert("❌ Táto zastávka je už nastavená ako cieľ.");
+                return;
+            }
+            startSelect.value = id;
+            alert("✅ Nastavený štart: " + name);
+        } else {
+            if (startSelect.value == id) {
+                alert("❌ Táto zastávka je už nastavená ako štart.");
+                return;
+            }
+            endSelect.value = id;
+            alert("🏁 Nastavený cieľ: " + name);
+        }
+        map.closePopup();
+    };
+
+    var searchInput = document.getElementById('map-stop-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            var query = e.target.value.toLowerCase().trim();
+            if (query.length < 2) return;
+
+            for (var name in markerMap) {
+                if (name.includes(query)) {
+                    var target = markerMap[name];
+                    map.flyTo([target.lat, target.lon], 15);
+                    target.marker.openPopup();
+                    break;
+                }
+            }
+        });
+    }
+
     const favBtn = document.getElementById('btn-add-favorite');
     const statusDiv = document.getElementById('favorite-status');
-
     if (favBtn) {
         favBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            
-            const start = this.dataset.start;
-            const end = this.dataset.end;
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
-                             document.querySelector('[name=csrf]')?.value;
-
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
             fetch("{% url 'personalization:add_favorite_ajax' %}", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-                body: JSON.stringify({ start: start, end: end })
+                headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
+                body: JSON.stringify({ start: this.dataset.start, end: this.dataset.end })
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 statusDiv.style.display = "block";
-                if (data.ok) {
-                    statusDiv.style.color = "green";
-                    statusDiv.textContent = "✅ " + data.message;
-                    favBtn.disabled = true;
-                } else {
-                    statusDiv.style.color = "red";
-                    statusDiv.textContent = "❌ Chyba: " + (data.error || "Neznáma chyba");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                statusDiv.style.display = "block";
-                statusDiv.style.color = "red";
-                statusDiv.textContent = "❌ Nepodarilo sa uložiť trasu.";
+                statusDiv.style.color = data.ok ? "green" : "red";
+                statusDiv.textContent = (data.ok ? "✅ " : "❌ ") + data.message;
+                if (data.ok) favBtn.disabled = true;
             });
         });
     }
