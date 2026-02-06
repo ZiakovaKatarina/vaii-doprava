@@ -1,17 +1,9 @@
-/* ==================================================================
-   VEREJNA DOPRAVA – Semestrálna práca 2025
-   Autor: Katarína Žiaková
-   Verzia: 2025-12-11 (kompletne preorganizovaná a opravená)
-   ================================================================== */
-
-/* 1. GLOBAL RESET & BOX-SIZING */
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-/* 2. CSS PREMENNÉ */
 :root {
     --primary-color:    #007bff;
     --primary-dark:     #0056b3;
@@ -28,7 +20,6 @@
     --shadow-md:        0 10px 25px rgba(0,0,0,0.12);
 }
 
-/* 3. ZÁKLADNÁ TYPOGRAFIA */
 body {
     font-family: var(--font-family);
     line-height: 1.6;
@@ -40,7 +31,6 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-/* 4. ODKAZY */
 a {
     color: var(--primary-color);
     text-decoration: none;
@@ -50,14 +40,12 @@ a:hover {
     color: var(--primary-dark);
 }
 
-/* 5. KONTAJNER */
 .container {
     width: 92%;
     max-width: var(--max-width);
     margin: 0 auto;
 }
 
-/* 6. HEADER */
 header {
     background: var(--primary-color);
     color: white;
@@ -77,7 +65,6 @@ header h1 {
     font-weight: 600;
 }
 
-/* 7. NAVIGÁCIA – ZÁKLAD */
 nav {
     display: flex;
     flex-wrap: wrap;
@@ -99,7 +86,6 @@ nav .nav-link:hover {
     background: rgba(255, 255, 255, 0.15);
 }
 
-/* 8. DROPDOWNY – SPOLOČNÉ */
 .dropdown {
     position: relative;
 }
@@ -158,14 +144,12 @@ nav .nav-link:hover {
   display: block;
 }
 
-/* 9. DROPDOWN – DESKTOP (hover) */
 @media (min-width: 992px) {
     .dropdown:hover > .dropdown-content {
         display: block;
     }
 }
 
-/* 10. DROPDOWN – MOBILE/TABLET (klik) */
 @media (max-width: 991px) {
     .dropdown-content {
         position: static;
@@ -174,7 +158,7 @@ nav .nav-link:hover {
         background: rgba(255, 255, 255, 0.15);
         box-shadow: none;
         border-radius: var(--radius-sm);
-        display: none;                     /* defaultne skryté */
+        display: none;                     
     }
     .dropdown.active > .dropdown-content {
         display: block;
@@ -188,13 +172,11 @@ nav .nav-link:hover {
     }
 }
 
-/* 11. HLAVNÝ OBSAH */
 main.container {
     flex: 1;
     padding: 2rem 0;
 }
 
-/* 12. CARD */
 .card {
     background: white;
     border-radius: var(--border-radius);
@@ -203,7 +185,6 @@ main.container {
     margin-bottom: 1.5rem;
 }
 
-/* 13. TLAČIDLÁ */
 .btn {
     display: inline-block;
     padding: 0.65rem 1.3rem;
@@ -254,7 +235,6 @@ main.container {
   color: #fff;
 }
 
-/* 14. FORMULÁRE */
 .form-row {
     margin-bottom: 1rem;
 }
@@ -283,7 +263,6 @@ select:focus {
     box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
 }
 
-/* 15. TABUĽKA */
 .table-wrapper {
     overflow-x: auto;
     border-radius: var(--radius-sm);
@@ -309,7 +288,6 @@ select:focus {
     background: #f8f9fc;
 }
 
-/* 16. NOTIFIKÁCIE */
 .alert {
     padding: 0.9rem 1.2rem;
     border-radius: var(--radius-sm);
@@ -327,7 +305,6 @@ select:focus {
     border: 1px solid #f5c6cb;
 }
 
-/* 17. FOOTER */
 footer {
     background: #1a1f2e;
     color: #adb5bd;
@@ -339,12 +316,10 @@ footer p {
     margin: 0.3rem 0;
 }
 
-/* 18. UTILITY KLASY */
 .text-muted   { color: var(--muted); font-size: 0.9rem; }
 .text-center  { text-align: center; }
 .mb-2         { margin-bottom: 1rem; }
 
-/* 19. RESPONSIVE – TABLET */
 @media (max-width: 991px) {
     header .container {
         flex-direction: column;
@@ -357,7 +332,6 @@ footer p {
     }
 }
 
-/* 20. RESPONSIVE – MOBIL */
 @media (max-width: 576px) {
     header h1 {
         font-size: 1.5rem;
@@ -371,7 +345,6 @@ footer p {
     }
 }
 
-/* 21. ERROR BOX */
 .error-box {
     color: #b00020;
     background: #fdecea;

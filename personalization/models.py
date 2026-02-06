@@ -8,7 +8,7 @@ class FavouriteRoute(models.Model):
         verbose_name='Používateľ'
     )
     startLocation = models.CharField(max_length=100, verbose_name='Počiatočný bod')
-    endLocation = models.CharField(max_length=20, verbose_name='Koncový bod') # TODO zmenit na 100
+    endLocation = models.CharField(max_length=100, verbose_name='Koncový bod') # TODO zmenit na 100
 
     class Meta:
         verbose_name = 'Obľúbená trasa'

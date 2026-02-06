@@ -26,7 +26,6 @@ def add_favorite_ajax(request):
         if not start_name or not end_name:
             return JsonResponse({'ok': False, 'error': 'Chýbajú názvy zastávok.'}, status=400)
 
-        # get_or_create zabezpečí, že sa nevytvoria duplicity
         obj, created = FavouriteRoute.objects.get_or_create(
             user=request.user,
             startLocation=start_name,

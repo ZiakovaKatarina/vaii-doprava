@@ -80,7 +80,7 @@ def users_edit(request, pk):
         form = AdminUserEditForm(request.POST, instance=user)
         if form.is_valid():
             user = form.save()
-            # zosúladenie role s is_staff
+
             user.role = 'admin' if user.is_staff else 'registered'
             user.save(update_fields=['role'])
             messages.success(request, f'Profil používateľa {user.username} bol aktualizovaný.')
@@ -139,7 +139,7 @@ def toggle_staff(request, pk):
 @require_GET
 @login_required
 def users_list_api(request):
-    # len pre adminov
+
     if not (request.user.is_staff or request.user.is_superuser):
         return JsonResponse({'detail': 'Forbidden'}, status=403)
 
@@ -164,7 +164,6 @@ def users_list_api(request):
     elif role == 'registered':
         qs = qs.filter(is_staff=False)
 
-    # bezpečné ordering
     allowed = {'username', 'email', 'date_joined', '-username', '-email', '-date_joined'}
     if ordering not in allowed:
         ordering = '-date_joined'
@@ -201,16 +200,14 @@ def login_view(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
-        
-        # Ak je AJAX request (kontrola Accept header)
+
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
             if user:
                 login(request, user)
                 return JsonResponse({'success': True, 'redirect_url': '/'})
             else:
                 return JsonResponse({'success': False, 'error': 'Nesprávne meno alebo heslo.'}, status=400)
-        
-        # Klasický flow (fallback)
+
         if user:
             login(request, user)
             return redirect('frontend:home')

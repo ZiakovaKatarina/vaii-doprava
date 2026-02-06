@@ -32,7 +32,7 @@
       tbody.innerHTML = rows || '<tr><td colspan="4" style="text-align:center;color:#999;">Žiadne zastávky</td></tr>';
 
       pageInfo.textContent = `Strana ${data.page} z ${data.pages}`;
-      // Skryť stránkovanie ak je len 1 strana
+
       if (data.pages <= 1) {
         paginationDiv.style.display = 'none';
       } else {

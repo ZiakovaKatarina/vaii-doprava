@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 class Vehicle(models.Model):
     VEHICLE_TYPES = [
@@ -19,7 +20,6 @@ class Vehicle(models.Model):
         verbose_name = 'Vozidlo'
         verbose_name_plural = 'Vozidlá'
 
-
 class Stop(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Názov zastávky')
     latitude = models.FloatField(verbose_name='Zemepisná šírka')
@@ -35,7 +35,6 @@ class Stop(models.Model):
         verbose_name_plural = 'Zastávky'
         ordering = ['name']
 
-
 class Route(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Číslo/Názov linky')
     start_stop = models.ForeignKey(Stop, on_delete=models.PROTECT, related_name='routes_start', verbose_name='Začiatočná zastávka')
@@ -50,7 +49,6 @@ class Route(models.Model):
         verbose_name_plural = 'Linky'
         ordering = ['name']
 
-
 class Trip(models.Model):
     route = models.ForeignKey(Route, on_delete=models.CASCADE, verbose_name='Linka')
     departure_time = models.TimeField(verbose_name='Čas odchodu')
@@ -60,6 +58,25 @@ class Trip(models.Model):
     
     def __str__(self):
         return f"{self.route} - {self.departure_time}"
+
+    def clean(self):
+        if self.departure_time and self.arrival_time and self.departure_time >= self.arrival_time:
+            raise ValidationError("Čas príchodu musí byť neskôr ako čas odchodu.")
+
+        if self.vehicleID and self.departure_time and self.arrival_time:
+            overlapping = Trip.objects.filter(
+                vehicleID=self.vehicleID,
+                departure_time__lt=self.arrival_time,
+                arrival_time__gt=self.departure_time
+            )
+            if self.pk:
+                overlapping = overlapping.exclude(pk=self.pk)
+
+            if overlapping.exists():
+                collision = overlapping.first()
+                raise ValidationError(
+                    f"Vozidlo je v tomto čase obsadené (Linka {collision.route.name})."
+                )
     
     class Meta:
         verbose_name = 'Spoj'

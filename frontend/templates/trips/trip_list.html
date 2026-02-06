@@ -3,7 +3,6 @@
 <div class="card">
     <h2>Zoznam spojov</h2>
 
-    <!-- Tlačidlo len pre admin používateľov -->
     {% if user.is_staff or user.is_superuser %}
         <a href="{% url 'frontend:trip_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
             + Pridať spoj
@@ -33,7 +32,7 @@
                         <td>{{ trip.departure_time }}</td>
                         <td>{{ trip.arrival_time }}</td>
                         <td>
-                            <!-- Akcie len pre admin -->
+                            
                             {% if user.is_staff or user.is_superuser %}
                                 <a href="{% url 'frontend:trip_update' trip.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
                                 <a href="{% url 'frontend:trip_delete' trip.pk %}" class="btn btn-sm btn-danger">Zmazať</a>

@@ -22,7 +22,7 @@
       if (data.success) {
         window.location.href = data.redirect_url;  // presmerovanie po úspechu
       } else {
-        // zobraz chybu (bez reloadu)
+
         const errorDiv = document.querySelector('.login-error') || document.createElement('div');
         errorDiv.className = 'login-error';
         errorDiv.style.color = 'red';

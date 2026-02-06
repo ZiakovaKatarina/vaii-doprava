@@ -1,4 +1,3 @@
-/* Toggle admin (is_staff) cez AJAX s obnovou badge v riadku tabuľky */
 (function () {
   'use strict';
 
@@ -11,7 +10,6 @@
     return null;
   }
 
-  // --- Toggle admin cez AJAX ---
   function findBadgeCell(checkbox) {
     const row = checkbox.closest('tr');
     return row ? row.querySelector('.badge-admin, .badge-role') : null;
@@ -52,7 +50,6 @@
     });
   }
 
-  // --- Filter + paginácia ---
   const elSearch = document.getElementById('user-search');
   const elRole = document.getElementById('role-filter');
   const elOrdering = document.getElementById('ordering');
@@ -85,11 +82,9 @@
     const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
     const data = await res.json();
 
-    // update state
     state.page = data.page;
     state.pages = data.pages;
 
-    // render rows
     const currentId = String(data.current_user_id);
     const rows = data.items.map(item => {
       const isCurrent = String(item.id) === currentId;

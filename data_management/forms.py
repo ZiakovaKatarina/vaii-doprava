@@ -20,19 +20,18 @@ class StopForm(forms.ModelForm):
             raise forms.ValidationError("Zemepisná šírka musí byť v rozsahu od -90 do 90.")
         return lat
         
-    def clean_longitue(self):
-        lat = self.cleaned_data.get('longitude')
-        if lat < - 180 or lat > 180:
+    def clean_longitude(self):
+        lon = self.cleaned_data.get('longitude')
+        if lon < - 180 or lon > 180:
             raise forms.ValidationError("Zemepisná dĺžka musí byť v rozsahu od -180 do 180.")
-        return lat
+        return lon
 
     def clean_name(self):
         name = self.cleaned_data.get('name', '').strip()
         
         if len(name) < 5:
              raise ValidationError("Názov zastávky musí mať aspoň 5 znakov.")
-        
-        # TODO zjednotit obidva regexy, povolit speci znaky ako napr. zatvorky
+
         reg = r'^[a-zA-Z0-9\s.,\-áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ.,]+$'
         
         if not re.match(reg, name):
@@ -77,9 +76,27 @@ class TripForm(forms.ModelForm):
         cleaned_data = super().clean()
         dep = cleaned_data.get('departure_time')
         arr = cleaned_data.get('arrival_time')
+        vehicle = cleaned_data.get('vehicleID')
 
         if dep and arr and dep >= arr:
             raise ValidationError({'arrival_time': "Čas príchodu musí byť neskôr ako čas odchodu."})
+
+        if vehicle and dep and arr:
+            overlapping_trips = Trip.objects.filter(
+                vehicleID=vehicle,
+                departure_time__lt=arr,
+                arrival_time__gt=dep
+            )
+            if self.instance.pk:
+                overlapping_trips = overlapping_trips.exclude(pk=self.instance.pk)
+
+            if overlapping_trips.exists():
+                collision = overlapping_trips.first()
+                raise ValidationError({
+                    'vehicleID': f"Vozidlo {vehicle} je v tomto čase už obsadené spojom na linke {collision.route.name} "
+                                 f"({collision.departure_time.strftime('%H:%M')} - {collision.arrival_time.strftime('%H:%M')})."
+                })
+
         return cleaned_data
 
 class VehicleForm(forms.ModelForm):

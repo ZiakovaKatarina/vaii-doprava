@@ -30,12 +30,10 @@ def csv_import_stops(request):
         csv_file = request.FILES['csv_file']
         raw_data = csv_file.read()
 
-        # KONTROLA: Ak súbor začína PK.., je to Excel/ZIP, nie CSV
         if raw_data.startswith(b'PK\x03\x04'):
             messages.error(request, "❌ Chyba: Nahrali ste Excel súbor (.xlsx). Prosím, uložte ho v Exceli ako 'CSV (oddelené čiarkou)' a skúste to znova.")
             return redirect('frontend:csv_upload')
 
-        # 1. Dekódovanie (UTF-8 alebo Windows-1250)
         decoded_file = None
         for enc in ['utf-8-sig', 'windows-1250', 'iso-8859-2']:
             try:
@@ -52,27 +50,22 @@ def csv_import_stops(request):
                 messages.error(request, "❌ Súbor je prázdny.")
                 return redirect('frontend:csv_upload')
 
-            # 2. Inteligentné zistenie oddeľovača (čiarka, bodkočiarka alebo tabulátor)
             header_line = lines[0]
             if ';' in header_line: sep = ';'
             elif '\t' in header_line: sep = '\t'
             else: sep = ','
 
-            # 3. Načítanie hlavičky a oprava "Excel chyby" (všetko v jednom stĺpci)
             reader = csv.reader(lines, delimiter=sep)
             header = next(reader)
 
-            # !!! AK EXCEL DAL VŠETKO DO JEDNÉHO STĹPCA !!!
             if len(header) == 1 and (',' in header[0] or ';' in header[0]):
                 actual_sep = ';' if ';' in header[0] else ','
                 header = header[0].split(actual_sep)
-                # Musíme zmeniť oddeľovač aj pre zvyšok súboru
+
                 reader = csv.reader(lines[1:], delimiter=actual_sep)
-            
-            # Vyčistenie názvov hlavičiek
+
             header = [h.strip().lower().replace('"', '') for h in header]
 
-            # 4. Mapovanie indexov
             idx_name = idx_lat = idx_lon = -1
             for i, h in enumerate(header):
                 if h in ['nazov', 'názov', 'name', 'zastavka']:
@@ -86,12 +79,11 @@ def csv_import_stops(request):
                 messages.error(request, f"❌ Chýbajúce stĺpce. Našiel som: {header}")
                 return redirect('frontend:csv_upload')
 
-            # 5. Samotný import
             count = 0
             errors = []
             
             for line_num, row in enumerate(reader, start=2):
-                # Ošetrenie prípadu, kedy je riadok znova v jednom stĺpci (hoci hlavička nebola)
+
                 if len(row) == 1 and (',' in row[0] or ';' in row[0]):
                     row_sep = ';' if ';' in row[0] else ','
                     row = row[0].split(row_sep)
@@ -139,7 +131,6 @@ def jdf_upload(request):
 def gdtf_upload(request):
     return render(request, 'files/gdtf_upload.html', {})
 
-# Stops
 def stop_list(request):
     stops = Stop.objects.all()
     return render(request, 'stops/stop_list.html', {'stops': stops})
@@ -285,7 +276,6 @@ def stops_api(request):
         'pages': paginator.num_pages,
     })
 
-# Trips
 def trip_list(request):
     trips = Trip.objects.all()
     return render(request, 'trips/trip_list.html', {'trips': trips})
@@ -296,7 +286,21 @@ def trip_create(request):
         form = TripForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, "Spoj bol úspešne pridaný.")
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'ok': True, 'redirect': reverse('frontend:trip_list')})
             return redirect('frontend:trip_list')
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                errors = []
+                for field in form:
+                    for error in field.errors:
+                        errors.append(f"{field.label}: {error}")
+                for error in form.non_field_errors():
+                    errors.append(str(error))
+                return JsonResponse({'ok': False, 'errors': errors}, status=400)
+            else:
+                messages.error(request, "Opravte prosím chyby vo formulári.")
     else:
         form = TripForm()
     return render(request, 'trips/trip_form.html', {'form': form, 'title': 'Pridať spoj'})
@@ -308,7 +312,21 @@ def trip_update(request, pk):
         form = TripForm(request.POST, instance=trip)
         if form.is_valid():
             form.save()
+            messages.success(request, "Spoj bol úspešne aktualizovaný.")
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'ok': True, 'redirect': reverse('frontend:trip_list')})
             return redirect('frontend:trip_list')
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                errors = []
+                for field in form:
+                    for error in field.errors:
+                        errors.append(f"{field.label}: {error}")
+                for error in form.non_field_errors():
+                    errors.append(str(error))
+                return JsonResponse({'ok': False, 'errors': errors}, status=400)
+            else:
+                messages.error(request, "Opravte prosím chyby vo formulári.")
     else:
         form = TripForm(instance=trip)
     return render(request, 'trips/trip_form.html', {'form': form, 'title': 'Upraviť spoj'})
@@ -321,7 +339,6 @@ def trip_delete(request, pk):
         return redirect('frontend:trip_list')
     return render(request, 'trips/trip_confirm_delete.html', {'trip': trip})
 
-# Routes
 def route_list(request):
     routes = Route.objects.all()
     return render(request, 'routes/route_list.html', {'routes': routes})
@@ -361,7 +378,6 @@ def route_delete(request, pk):
         return redirect('frontend:route_list')
     return render(request, 'routes/route_confirm_delete.html', {'route': route})
 
-# Vehicles
 def vehicle_list(request):
     vehicles = Vehicle.objects.all()
     return render(request, 'vehicles/vehicle_list.html', {'vehicles': vehicles})
@@ -397,7 +413,6 @@ def vehicle_delete(request, pk):
         return redirect('frontend:vehicle_list')
     return render(request, 'vehicles/vehicle_confirm_delete.html', {'vehicle': vehicle})
 
-# Connections
 from django.db.models import Prefetch
 from data_management.models import RouteStop
 
@@ -415,7 +430,6 @@ def search_connections(request):
         start_stop = get_object_or_404(Stop, pk=start_id)
         end_stop = get_object_or_404(Stop, pk=end_id)
 
-        # --- 1. PRIAME SPOJE (bez duplicit) ---
         start_rss = RouteStop.objects.filter(stop=start_stop)
         seen_direct_trips = set()
 
@@ -440,7 +454,6 @@ def search_connections(request):
                         })
                         seen_direct_trips.add(trip_key)
 
-        # --- 2. PRESTUPY (len ak nie je priamy spoj) ---
         if not direct_connections:
             seen_transfers = set()
 
@@ -495,7 +508,6 @@ def search_connections(request):
         start_stop = get_object_or_404(Stop, pk=start_id)
         end_stop = get_object_or_404(Stop, pk=end_id)
 
-        # --- 1. PRIAME SPOJE (bez duplicit) ---
         start_rss = RouteStop.objects.filter(stop=start_stop)
         seen_direct_trips = set()
 
@@ -520,7 +532,6 @@ def search_connections(request):
                         })
                         seen_direct_trips.add(trip_key)
 
-        # --- 2. PRESTUPY (len ak nie je priamy spoj) ---
         if not direct_connections:
             seen_transfers = set()
 

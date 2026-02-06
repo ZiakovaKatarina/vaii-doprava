@@ -33,12 +33,10 @@ class UserRegistrationForm(UserCreationForm):
             'class': 'form-control',
             'placeholder': 'Potvrdenie hesla',
         })
-        
-        # Slovenské chybové hlášky
+
         self.fields['password1'].help_text = None
         self.fields['password2'].help_text = 'Zadajte rovnaké heslo ako predtým, pre overenie.'
-    
-    # Serverová validácia
+
     def clean_username(self):
         username = self.cleaned_data.get('username')
         if len(username) < 4:
@@ -80,8 +78,7 @@ class UserRegistrationForm(UserCreationForm):
         if password1 and password2:
             if password1 != password2:
                 raise ValidationError('Heslá sa nezhodujú.')
-            
-            # Pokročilá validácia hesla
+
             if len(password1) < 8:
                 raise ValidationError('Heslo musí mať aspoň 8 znakov.')
             if not re.search(r'[A-Z]', password1):

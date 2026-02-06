@@ -28,12 +28,12 @@
           alert('✅ Uložené úspešne!');
           window.location.href = data.redirect || '/stops/';
         } else {
-          // data.errors je teraz pole zo servera
+
           const msg = Array.isArray(data.errors) ? data.errors.join('\n') : data.errors;
           alert('❌ Validačná chyba:\n' + msg);
         }
       } else {
-        // Ak to nie je JSON, server poslal HTML (napr. chybu 500)
+
         const htmlErr = await res.text();
         console.error("Server vrátil HTML namiesto JSON:", htmlErr);
         alert('❌ Server vrátil chybu (HTML). Pozri konzolu F12.');

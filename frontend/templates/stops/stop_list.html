@@ -12,10 +12,8 @@
     {% endif %}
   </div>
 
-  <!-- Vyhľadávacie pole -->
   <input type="text" id="stops-search" placeholder="Hľadať..." style="margin-bottom:15px; padding:8px; width:250px;">
 
-  <!-- Výber počtu záznamov na stránku -->
   <label for="stops-page-size" style="margin-left:20px;">Záznamov na stránku:</label>
   <select id="stops-page-size" style="margin-bottom:15px; padding:6px;">
     <option value="5">5</option>
@@ -35,28 +33,11 @@
         {% endif %}
       </tr>
     </thead>
-    <!--
-    <tbody>
-      {% for stop in stops %}
-        <tr>
-          <td class="editable-cell" data-stop-id="{{ stop.pk }}" data-field="name">{{ stop.name }}</td>
-          <td class="editable-cell" data-stop-id="{{ stop.pk }}" data-field="latitude">{{ stop.latitude }}</td>
-          <td class="editable-cell" data-stop-id="{{ stop.pk }}" data-field="longitude">{{ stop.longitude }}</td>
-          {% if user.is_staff %}
-            <td style="text-align:center;">
-              <a href="{% url 'frontend:stop_update' stop.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
-              <a href="{% url 'frontend:stop_delete' stop.pk %}" class="btn btn-sm btn-outline">Zmazať</a>
-            </td>
-          {% endif %}
-        </tr>
-      {% empty %}
-        <tr><td colspan="4" style="text-align:center;color:#999;">Žiadne zastávky</td></tr>
-      {% endfor %}-->
+    
       <tbody id="stops-tbody">
     </tbody>
   </table>
-  
-  <!-- Stránkovanie -->
+
   <div id="stops-pagination" style="display:flex;justify-content:space-between;margin-top:20px;">
     <button id="stops-prev" class="btn">← Predošlá</button>
     <span id="stops-page-info">Strana 1 z 1</span>
