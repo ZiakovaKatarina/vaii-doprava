@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2>Import zastávok z CSV</h2>
+    <p>Nahrajte súbor vo formáte <code>.csv</code>. Systém automaticky vytvorí nové zastávky.</p>
+    
+    <div style="background: #f4f4f4; padding: 10px; border-radius: 5px; margin: 15px 0; font-family: monospace; font-size: 0.9rem;">
+        <strong>Očakávaný formát:</strong><br>
+        nazov,latitude,longitude<br>
+        Zastavka A,48.123,17.456<br>
+        Zastavka B,48.789,17.123
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="csv_file" accept=".csv" required style="margin-bottom: 20px;">
+        <br>
+        <button type="submit" class="btn btn-primary">Importovať zastávky</button>
+        <a href="{% url 'frontend:file_upload' %}" class="btn btn-outline">Späť</a>
+    </form>
+</div>
+{% endblock %}

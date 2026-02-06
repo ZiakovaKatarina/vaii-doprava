@@ -2,37 +2,25 @@
 
 {% block content %}
 
-<div class="card" ><!-- style="max-width: 500px; margin: 0 auto;"-->
+<div class="card">
     
-    <h2 style="padding-bottom: 10px;">Vyberte typ súboru na nahratie</h2>
+    <h2 style="padding-bottom: 10px;">Import dát do systému</h2>
     
-    <div style="display: flex; gap: 1rem; justify-content: space-around;">
-        
-        <a href="{% url 'frontend:jdf_upload' %}" class="btn btn-outline" style="width: 50px; flex-grow: 1; text-decoration: none; text-align: center;">
-            Nahrať JDF
-        </a>
-        
-        <a href="{% url 'frontend:gdtf_upload' %}" class="btn btn-outline" style="width: auto; flex-grow: 1; text-decoration: none; text-align: center;">
-            Nahrať GDTF
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+        <a href="{% url 'frontend:csv_upload' %}" class="btn btn-primary" style="width: auto; flex-grow: 1; text-decoration: none; text-align: center; max-width: 300px;">
+            📁 Importovať zastávky z CSV
         </a>
     </div>
+    
+    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+        <h3 style="margin-top: 0;">Ako importovať data?</h3>
+        <p>Pomocou CSV importu môžete hromadne pridať zastávky do systému.</p>
+        <p><strong>Formát CSV súboru:</strong></p>
+        <pre style="background: white; padding: 10px; border-radius: 3px;">nazov,latitude,longitude
+Zilina-Mesto,49.223,18.740
+Uniza,49.202,18.761</pre>
+    </div>
         
-        <div style="display: flex; gap: 1rem; justify-content: space-around;">
-            <div>
-                <b>Povinné prílohy pre JDF:</b>
-                <p style="text-indent: 30px;">nejakySubor.txt</p>
-                <p style="text-indent: 30px;">dalsi.txt</p>
-                <b>Voliteľné prílohy pre JDF:</b>
-
-            </div>
-
-            <div>
-                <p>Povinne prilohy pre GDTF</p>
-                <p>Povinne prilohy pre GDTF</p>
-                <p>Povinne prilohy pre GDTF</p>
-                <p>Povinne prilohy pre GDTF</p>
-            </div>
-        </div>
 </div>
 
 {% endblock %}

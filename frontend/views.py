@@ -5,11 +5,14 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q, Max, F
 from django.views.decorators.http import require_http_methods, require_GET
+from django.urls import reverse
 from users.decorators import admin_required
 from django.contrib import messages
 from django.db.models import ProtectedError
-import json
 from django.db import transaction
+import json
+import csv
+import io
 
 from data_management.models import Stop, Trip, Route, Vehicle, RouteStop
 from data_management.forms import StopForm, TripForm, RouteForm, VehicleForm
@@ -20,6 +23,113 @@ def home(request):
 @admin_required
 def file_upload(request):
     return render(request, 'files/file_upload.html', {})
+
+@admin_required
+def csv_import_stops(request):
+    if request.method == 'POST' and request.FILES.get('csv_file'):
+        csv_file = request.FILES['csv_file']
+        raw_data = csv_file.read()
+
+        # KONTROLA: Ak súbor začína PK.., je to Excel/ZIP, nie CSV
+        if raw_data.startswith(b'PK\x03\x04'):
+            messages.error(request, "❌ Chyba: Nahrali ste Excel súbor (.xlsx). Prosím, uložte ho v Exceli ako 'CSV (oddelené čiarkou)' a skúste to znova.")
+            return redirect('frontend:csv_upload')
+
+        # 1. Dekódovanie (UTF-8 alebo Windows-1250)
+        decoded_file = None
+        for enc in ['utf-8-sig', 'windows-1250', 'iso-8859-2']:
+            try:
+                decoded_file = raw_data.decode(enc)
+                break
+            except UnicodeDecodeError:
+                continue
+        if not decoded_file:
+            decoded_file = raw_data.decode('utf-8', errors='replace')
+
+        try:
+            lines = [line.strip() for line in decoded_file.splitlines() if line.strip()]
+            if not lines:
+                messages.error(request, "❌ Súbor je prázdny.")
+                return redirect('frontend:csv_upload')
+
+            # 2. Inteligentné zistenie oddeľovača (čiarka, bodkočiarka alebo tabulátor)
+            header_line = lines[0]
+            if ';' in header_line: sep = ';'
+            elif '\t' in header_line: sep = '\t'
+            else: sep = ','
+
+            # 3. Načítanie hlavičky a oprava "Excel chyby" (všetko v jednom stĺpci)
+            reader = csv.reader(lines, delimiter=sep)
+            header = next(reader)
+
+            # !!! AK EXCEL DAL VŠETKO DO JEDNÉHO STĹPCA !!!
+            if len(header) == 1 and (',' in header[0] or ';' in header[0]):
+                actual_sep = ';' if ';' in header[0] else ','
+                header = header[0].split(actual_sep)
+                # Musíme zmeniť oddeľovač aj pre zvyšok súboru
+                reader = csv.reader(lines[1:], delimiter=actual_sep)
+            
+            # Vyčistenie názvov hlavičiek
+            header = [h.strip().lower().replace('"', '') for h in header]
+
+            # 4. Mapovanie indexov
+            idx_name = idx_lat = idx_lon = -1
+            for i, h in enumerate(header):
+                if h in ['nazov', 'názov', 'name', 'zastavka']:
+                    idx_name = i
+                if h in ['latitude', 'lat', 'zemepisna sirka', 'sirka']:
+                    idx_lat = i
+                if h in ['longitude', 'lon', 'zemepisna dlzka', 'dlzka']:
+                    idx_lon = i
+
+            if idx_name == -1 or idx_lat == -1 or idx_lon == -1:
+                messages.error(request, f"❌ Chýbajúce stĺpce. Našiel som: {header}")
+                return redirect('frontend:csv_upload')
+
+            # 5. Samotný import
+            count = 0
+            errors = []
+            
+            for line_num, row in enumerate(reader, start=2):
+                # Ošetrenie prípadu, kedy je riadok znova v jednom stĺpci (hoci hlavička nebola)
+                if len(row) == 1 and (',' in row[0] or ';' in row[0]):
+                    row_sep = ';' if ';' in row[0] else ','
+                    row = row[0].split(row_sep)
+
+                if len(row) <= max(idx_name, idx_lat, idx_lon):
+                    continue
+                
+                try:
+                    name = row[idx_name].strip().replace('"', '')
+                    lat_val = float(row[idx_lat].strip().replace('"', '').replace(',', '.'))
+                    lon_val = float(row[idx_lon].strip().replace('"', '').replace(',', '.'))
+
+                    if name:
+                        Stop.objects.update_or_create(
+                            name=name,
+                            defaults={'latitude': lat_val, 'longitude': lon_val}
+                        )
+                        count += 1
+                except (ValueError, TypeError, IndexError) as e:
+                    errors.append(f"Riadok {line_num}: Neplatné údaje")
+
+            if count > 0:
+                messages.success(request, f'✓ Import úspešný! Pridaných/upravených zastávok: {count}')
+            else:
+                messages.warning(request, '⚠ Súbor bol načítaný, ale nenašli sa žiadne dáta na import.')
+            
+            if errors:
+                for error in errors[:5]:
+                    messages.warning(request, error)
+                if len(errors) > 5:
+                    messages.warning(request, f"... a ďalších {len(errors) - 5} chýb")
+
+        except Exception as e:
+            messages.error(request, f'❌ Chyba pri spracovaní: {e}')
+            
+        return redirect('frontend:stop_list')
+    
+    return render(request, 'files/csv_upload.html', {})
 
 @admin_required
 def jdf_upload(request):
@@ -51,18 +161,36 @@ def stop_create(request):
 @admin_required
 def stop_update(request, pk):
     stop = get_object_or_404(Stop, pk=pk)
+    
+    is_ajax = (request.headers.get('x-requested-with') == 'XMLHttpRequest' or 
+               request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest')
+
     if request.method == "POST":
-        if not request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'ok': False, 'error': 'Update je povolený len cez AJAX.'}, status=403)
         form = StopForm(request.POST, instance=stop)
         if form.is_valid():
             form.save()
-            return JsonResponse({'ok': True, 'redirect': '/stops/'})
+            if is_ajax:
+                return JsonResponse({'ok': True, 'redirect': reverse('frontend:stop_list')})
+            messages.success(request, f"Zastávka '{stop.name}' bola aktualizovaná.")
+            return redirect('frontend:stop_list')
         else:
-            error_text = " ".join([error for field in form.errors for error in form.errors[field]])
-            return JsonResponse({'ok': False, 'errors': error_text}, status=400)
+            if is_ajax:
+                errors = []
+                for field in form:
+                    for error in field.errors:
+                        errors.append(f"{field.label}: {error}")
+                for error in form.non_field_errors():
+                    errors.append(error)
+                
+                return JsonResponse({
+                    'ok': False, 
+                    'errors': errors
+                }, status=400)
+            else:
+                messages.error(request, "Opravte prosím chyby vo formulári.")
     else:
         form = StopForm(instance=stop)
+
     return render(request, 'stops/stop_form.html', {
         'form': form,
         'stop': stop,
@@ -287,59 +415,63 @@ def search_connections(request):
         start_stop = get_object_or_404(Stop, pk=start_id)
         end_stop = get_object_or_404(Stop, pk=end_id)
 
-        # --- PRIAME TRASY ---
+        # --- 1. PRIAME SPOJE (bez duplicit) ---
         start_rss = RouteStop.objects.filter(stop=start_stop)
+        seen_direct_trips = set()
+
         for s_rs in start_rss:
             valid_ends = RouteStop.objects.filter(
-                route=s_rs.route, 
-                stop=end_stop, 
+                route=s_rs.route,
+                stop=end_stop,
                 order__gt=s_rs.order
             )
-            
+
             if valid_ends.exists():
                 trips = Trip.objects.filter(route=s_rs.route).select_related('vehicleID')
-                if trips.exists():
-                    for t in trips:
+                for t in trips:
+                    trip_key = (t.route_id, t.departure_time)
+                    if trip_key not in seen_direct_trips:
                         direct_connections.append({
                             "route": s_rs.route,
                             "trip": t,
-                            "has_times": True
+                            "departure": t.departure_time,
+                            "arrival": t.arrival_time,
+                            "vehicle": t.vehicleID,
                         })
-                else:
-                    # Trasa existuje, ale bez konkrétnych spojov (Tripov)
-                    direct_connections.append({
-                        "route": s_rs.route,
-                        "has_times": False
-                    })
+                        seen_direct_trips.add(trip_key)
 
-        # --- PRESTUPY (iba ak nie sú priame) ---
+        # --- 2. PRESTUPY (len ak nie je priamy spoj) ---
         if not direct_connections:
             seen_transfers = set()
-            r1_list = RouteStop.objects.filter(stop=start_stop)
-            r2_list = RouteStop.objects.filter(stop=end_stop)
 
-            for r1 in r1_list:
-                for r2 in r2_list:
+            routes_from_start = RouteStop.objects.filter(stop=start_stop)
+            routes_to_end = RouteStop.objects.filter(stop=end_stop)
+
+            for r1 in routes_from_start:
+                for r2 in routes_to_end:
                     if r1.route == r2.route:
                         continue
-                    
-                    common_x = RouteStop.objects.filter(
-                        route=r1.route, order__gt=r1.order
+
+                    common_stops = RouteStop.objects.filter(
+                        route=r1.route,
+                        order__gt=r1.order
                     ).values_list('stop', flat=True)
 
                     transfers = RouteStop.objects.filter(
-                        route=r2.route, stop_id__in=common_x, order__lt=r2.order
+                        route=r2.route,
+                        stop_id__in=common_stops,
+                        order__lt=r2.order
                     ).select_related('stop')
 
                     for x in transfers:
-                        key = (r1.route.id, x.stop.id, r2.route.id)
-                        if key not in seen_transfers:
+                        transfer_key = (r1.route.id, x.stop.id, r2.route.id)
+                        if transfer_key not in seen_transfers:
                             transfer_connections.append({
                                 "stop_x": x.stop,
                                 "route1": r1.route,
                                 "route2": r2.route,
                             })
-                            seen_transfers.add(key)
+                            seen_transfers.add(transfer_key)
 
     return render(request, "search_connections.html", {
         "stops": stops,

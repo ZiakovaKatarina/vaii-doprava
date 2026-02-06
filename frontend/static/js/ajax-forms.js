@@ -15,20 +15,31 @@
         method: 'POST',
         body: formData,
         headers: {
+          'X-Requested-With': 'XMLHttpRequest',
           'X-CSRFToken': csrfToken
         }
       });
       
-      const data = await res.json();
+      const contentType = res.headers.get("content-type");
       
-      if (data.ok) {
-        alert('✅ Zastávka bola úspešne vytvorená!');
-        window.location.href = data.redirect || '/stops/';
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        const data = await res.json();
+        if (data.ok) {
+          alert('✅ Uložené úspešne!');
+          window.location.href = data.redirect || '/stops/';
+        } else {
+          // data.errors je teraz pole zo servera
+          const msg = Array.isArray(data.errors) ? data.errors.join('\n') : data.errors;
+          alert('❌ Validačná chyba:\n' + msg);
+        }
       } else {
-        alert('❌ Chyba: ' + (data.errors || 'Nepodarilo sa uložiť'));
+        // Ak to nie je JSON, server poslal HTML (napr. chybu 500)
+        const htmlErr = await res.text();
+        console.error("Server vrátil HTML namiesto JSON:", htmlErr);
+        alert('❌ Server vrátil chybu (HTML). Pozri konzolu F12.');
       }
     } catch (err) {
-      alert('❌ Chyba: ' + err.message);
+      alert('❌ Kritická chyba komunikácie: ' + err.message);
     }
   });
 })();

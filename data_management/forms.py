@@ -14,6 +14,18 @@ class StopForm(forms.ModelForm):
             'longitude': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.000001', 'min': -180, 'max': 180}),
         }
 
+    def clean_latitude(self):
+        lat = self.cleaned_data.get('latitude')
+        if lat < - 90 or lat > 90:
+            raise forms.ValidationError("Zemepisná šírka musí byť v rozsahu od -90 do 90.")
+        return lat
+        
+    def clean_longitue(self):
+        lat = self.cleaned_data.get('longitude')
+        if lat < - 180 or lat > 180:
+            raise forms.ValidationError("Zemepisná dĺžka musí byť v rozsahu od -180 do 180.")
+        return lat
+
     def clean_name(self):
         name = self.cleaned_data.get('name', '').strip()
         

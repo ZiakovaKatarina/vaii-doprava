@@ -11,7 +11,7 @@ urlpatterns = [
     path('stops/create/', views.stop_create, name='stop_create'),
     path('stops/<int:pk>/update/', views.stop_update, name='stop_update'),
     path('stops/<int:pk>/delete/', views.stop_delete, name='stop_delete'),
-    path('api/stops/<int:pk>/update/', views.stop_update_inline, name='stop_update_inline'),  # ← PRIDAJ
+    path('api/stops/<int:pk>/update/', views.stop_update_inline, name='stop_update_inline'),
     path('api/stops/', views.stops_api, name='stops_api'),
 
     # Trips
@@ -41,8 +41,7 @@ urlpatterns = [
     
     # File uploads
     path('upload/', views.file_upload, name='file_upload'),
-    path('upload/jdf/', views.jdf_upload, name='jdf_upload'),
-    path('upload/gdtf/', views.gdtf_upload, name='gdtf_upload'),
+    path('upload/csv/', views.csv_import_stops, name='csv_upload'),
 
     # Search
     path('search/', views.search_connections, name='search_connections'),
