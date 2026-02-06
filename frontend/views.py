@@ -10,6 +10,7 @@ from users.decorators import admin_required
 from django.contrib import messages
 from django.db.models import ProtectedError
 from django.db import transaction
+from django.core.exceptions import ValidationError
 import json
 import csv
 import io
@@ -214,34 +215,28 @@ def stop_update_inline(request, pk):
         return JsonResponse({'detail': 'Forbidden'}, status=403)
     
     stop = get_object_or_404(Stop, pk=pk)
-    import json
     try:
         data = json.loads(request.body or '{}')
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
-    
-    updated = False
-    if 'name' in data:
-        stop.name = data['name']
-        updated = True
-    if 'latitude' in data:
-        try:
+        
+        if 'name' in data:
+            stop.name = data['name']
+        if 'latitude' in data:
             stop.latitude = float(data['latitude'])
-            updated = True
-        except ValueError:
-            return JsonResponse({'error': 'Neplatná hodnota latitude'}, status=400)
-    if 'longitude' in data:
-        try:
+        if 'longitude' in data:
             stop.longitude = float(data['longitude'])
-            updated = True
-        except ValueError:
-            return JsonResponse({'error': 'Neplatná hodnota longitude'}, status=400)
-    
-    if updated:
+            
+        stop.full_clean()
         stop.save()
+        
         return JsonResponse({'ok': True})
-    else:
-        return JsonResponse({'error': 'Žiadne zmeny'}, status=400)
+
+    except ValidationError as e:
+        error_msg = str(e.messages[0]) if e.messages else str(e)
+        return JsonResponse({'error': error_msg}, status=400)
+    except ValueError:
+        return JsonResponse({'error': 'Neplatný formát čísla.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Chyba: {str(e)}'}, status=500)
 
 @require_GET
 def stops_api(request):
@@ -493,85 +488,7 @@ def search_connections(request):
         "start_stop": start_stop,
         "end_stop": end_stop,
     })
-"""
-def search_connections(request):
-    stops = Stop.objects.all().order_by("name")
-    start_id = request.GET.get("start_stop")
-    end_id = request.GET.get("end_stop")
 
-    direct_connections = []
-    transfer_connections = []
-    start_stop = None
-    end_stop = None
-
-    if start_id and end_id and start_id != end_id:
-        start_stop = get_object_or_404(Stop, pk=start_id)
-        end_stop = get_object_or_404(Stop, pk=end_id)
-
-        start_rss = RouteStop.objects.filter(stop=start_stop)
-        seen_direct_trips = set()
-
-        for s_rs in start_rss:
-            valid_ends = RouteStop.objects.filter(
-                route=s_rs.route,
-                stop=end_stop,
-                order__gt=s_rs.order
-            )
-
-            if valid_ends.exists():
-                trips = Trip.objects.filter(route=s_rs.route).select_related('vehicleID')
-                for t in trips:
-                    trip_key = (t.route_id, t.departure_time)
-                    if trip_key not in seen_direct_trips:
-                        direct_connections.append({
-                            "route": s_rs.route,
-                            "trip": t,
-                            "departure": t.departure_time,
-                            "arrival": t.arrival_time,
-                            "vehicle": t.vehicleID,
-                        })
-                        seen_direct_trips.add(trip_key)
-
-        if not direct_connections:
-            seen_transfers = set()
-
-            routes_from_start = RouteStop.objects.filter(stop=start_stop)
-            routes_to_end = RouteStop.objects.filter(stop=end_stop)
-
-            for r1 in routes_from_start:
-                for r2 in routes_to_end:
-                    if r1.route == r2.route:
-                        continue
-
-                    common_stops = RouteStop.objects.filter(
-                        route=r1.route,
-                        order__gt=r1.order
-                    ).values_list('stop', flat=True)
-
-                    transfers = RouteStop.objects.filter(
-                        route=r2.route,
-                        stop_id__in=common_stops,
-                        order__lt=r2.order
-                    ).select_related('stop')
-
-                    for x in transfers:
-                        transfer_key = (r1.route.id, x.stop.id, r2.route.id)
-                        if transfer_key not in seen_transfers:
-                            transfer_connections.append({
-                                "stop_x": x.stop,
-                                "route1": r1.route,
-                                "route2": r2.route,
-                            })
-                            seen_transfers.add(transfer_key)
-
-    return render(request, "search_connections.html", {
-        "stops": stops,
-        "direct_connections": direct_connections,
-        "transfer_connections": transfer_connections[:10],
-        "start_id": start_id,
-        "end_id": end_id,
-    })
-"""
 @admin_required
 def route_stops_manage(request, route_id):
     route = get_object_or_404(Route, pk=route_id)

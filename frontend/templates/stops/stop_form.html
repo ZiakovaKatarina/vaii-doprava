@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     name.addEventListener('input', () => {
         const alertBox = getAlert(name);
         const nameValue = name.value.trim();
-        const regex = /^(?=.*[a-zA-ZáäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ.,()])[a-zA-Z0-9 áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ.,()]{5,}$/;
+        const regex = /^[a-zA-Z0-9áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ\s\.\(\),]{5,}$/;
 
         if (nameValue === "") {
             name.setCustomValidity("Názov je povinný.");

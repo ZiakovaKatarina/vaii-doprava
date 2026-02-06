@@ -23,4 +23,22 @@
         <a class="btn btn-outline" href="{% url 'frontend:route_list' %}">Späť na zoznam</a>
     </form>
 </div>
+
+<script>
+    const regexRoute = /^[a-zA-Z0-9áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ\s-]{2,}$/;
+    
+    const nameInput = document.querySelector('input[name="name"]');
+    nameInput && nameInput.addEventListener('input', function() {
+        const name = this.value.trim();
+        const errorDiv = this.parentElement.querySelector('.alert.alert-error');
+        
+        if (name.length > 0 && !regexRoute.test(name)) {
+            this.classList.add('error');
+            if (errorDiv) errorDiv.style.display = 'block';
+        } else {
+            this.classList.remove('error');
+            if (errorDiv) errorDiv.style.display = 'none';
+        }
+    });
+</script>
 {% endblock %}

@@ -16,26 +16,22 @@ class StopForm(forms.ModelForm):
 
     def clean_latitude(self):
         lat = self.cleaned_data.get('latitude')
-        if lat < - 90 or lat > 90:
+        if lat < -90 or lat > 90:
             raise forms.ValidationError("Zemepisná šírka musí byť v rozsahu od -90 do 90.")
         return lat
         
     def clean_longitude(self):
         lon = self.cleaned_data.get('longitude')
-        if lon < - 180 or lon > 180:
+        if lon < -180 or lon > 180:
             raise forms.ValidationError("Zemepisná dĺžka musí byť v rozsahu od -180 do 180.")
         return lon
 
     def clean_name(self):
         name = self.cleaned_data.get('name', '').strip()
+        regex = r'^[a-zA-Z0-9áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ\s\.\(\),]{5,}$'
         
-        if len(name) < 5:
-             raise ValidationError("Názov zastávky musí mať aspoň 5 znakov.")
-
-        reg = r'^[a-zA-Z0-9\s.,\-áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ.,]+$'
-        
-        if not re.match(reg, name):
-            raise ValidationError("Názov zastávky obsahuje nepovolené znaky (povolené sú písmená, čísla, medzery, pomlčky, bodky a čiarky).")
+        if not re.match(regex, name):
+            raise ValidationError("Názov zastávky musí mať aspoň 5 znakov a môže obsahovať len povolené znaky (písmená slovenskej abecedy, čísla, bodky, čiarky a okrúhle zátvorky).")
 
         qs = Stop.objects.filter(name__iexact=name)
         if self.instance.pk:
@@ -57,8 +53,19 @@ class RouteForm(forms.ModelForm):
 
     def clean_name(self):
         name = self.cleaned_data.get('name', '').strip()
-        if len(name) < 4:
-            raise ValidationError("Názov linky musí mať aspoň 4 znaky.")
+        regex = r'^[a-zA-Z0-9áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ\s-]{2,}$'
+        
+        if not re.match(regex, name):
+            raise ValidationError("Názov linky obsahuje nepovolené znaky.")
+        if len(name) < 2:
+            raise ValidationError("Názov linky musí mať aspoň 2 znaky.")
+        
+        qs = Route.objects.filter(name__iexact=name)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise ValidationError("Linka s týmto názvom už existuje.")
+        
         return name
 
 class TripForm(forms.ModelForm):
@@ -110,4 +117,16 @@ class VehicleForm(forms.ModelForm):
         }
 
     def clean_registration_number(self):
-        return self.cleaned_data.get('registration_number', '').upper()
+        reg = self.cleaned_data.get('registration_number', '').upper().strip()
+        regex = r'^[A-Z]{2}-?[0-9]{3}[A-Z]{2}$|^[A-Z0-9-]{4,10}$'
+        
+        if not re.match(regex, reg):
+            raise ValidationError("Zadajte platný formát ŠPZ (napr. ZA-123AB).")
+        
+        qs = Vehicle.objects.filter(registration_number__iexact=reg)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise ValidationError("Vozidlo s týmto registračným číslom už existuje.")
+        
+        return reg
