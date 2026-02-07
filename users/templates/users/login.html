@@ -4,27 +4,55 @@
 {% block title %}Prihlásenie{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width:400px;margin-top:50px;">
-  <h2>Prihlásenie</h2>
-  
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
-  
-  <form id="login-form" method="post" action="{% url 'users:login' %}">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Prihlásiť sa</button>
-  </form>
-  
-  <p style="margin-top:20px;">
-    Nemáte účet? <a href="{% url 'users:register' %}">Zaregistrujte sa</a>
-  </p>
-</div>
-{% endblock %}
+<div class="container" style="max-width: 450px; margin-top: 50px;">
+    <div class="card">
+        <h2 style="margin-bottom: 1.5rem; text-align: center;">Prihlásenie</h2>
 
-{% block extra_js %}
+        <!-- Tu bude AJAX vkladať chybu (iba ak nastane) -->
+        <div id="login-error-container"></div>
+
+        <form id="login-form" method="post" action="{% url 'users:login' %}">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <label for="id_username">Používateľské meno:</label>
+                <input type="text" name="username" id="id_username" class="form-control" required placeholder="Zadajte meno">
+            </div>
+
+            <div class="form-row">
+                <label for="id_password">Heslo:</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="password" name="password" id="id_password" class="form-control" required placeholder="Zadajte heslo" style="flex: 1;">
+                    <button type="button" id="togglePassword" class="btn btn-outline" style="padding: 0 12px; min-width: 48px;">
+                        👁️
+                    </button>
+                </div>
+            </div>
+
+            <div class="login-actions">
+                <button type="submit" class="btn btn-primary">Prihlásiť sa</button>
+                <a href="{% url 'users:password_reset' %}" class="btn btn-outline" style="text-decoration: none;">
+                    Zabudli ste heslo?
+                </a>
+            </div>
+        </form>
+
+        <p style="margin-top: 25px; text-align: center; border-top: 1px solid #eee; padding-top: 15px;">
+            Nemáte účet? <a href="{% url 'users:register' %}">Zaregistrujte sa</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#id_password');
+
+    togglePassword.addEventListener('click', function (e) {
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        this.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+</script>
+
 <script src="{% static 'js/ajax-login.js' %}"></script>
 {% endblock %}
