@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card">
-    <h2>Zoznam líniek</h2>
+    <h2>Zoznam liniek</h2>
 
-    <a href="{% url 'frontend:route_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
-        + Pridať linku
-    </a>
+    {% if user.is_staff or user.is_superuser %}
+        <a href="{% url 'frontend:route_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
+            + Pridať linku
+        </a>
+    {% endif %}
 
     <div class="table-wrapper">
         <table class="table">
@@ -13,7 +15,9 @@
                 <tr>
                     <th>Číslo linky</th>
                     <th>Názov</th>
-                    <th>Akcie</th>
+                    {% if user.is_staff or user.is_superuser %}
+                        <th>Akcie</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -21,15 +25,18 @@
                     <tr>
                         <td>{{ route.name }}</td>
                         <td>{{ route.start_stop.name }} → {{ route.end_stop.name }}</td>
-                        <td>
-                            <a href="{% url 'frontend:route_update' route.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
-                            <a href="{% url 'frontend:route_delete' route.pk %}" class="btn btn-sm btn-danger">Zmazať</a>
-                            <a class="btn btn-secondary" href="{% url 'frontend:route_stops_manage' route.id %}">Trasa</a>
-                        </td>
+                        
+                        {% if user.is_staff or user.is_superuser %}
+                            <td>
+                                <a href="{% url 'frontend:route_update' route.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
+                                <a href="{% url 'frontend:route_delete' route.pk %}" class="btn btn-sm btn-danger">Zmazať</a>
+                                <a class="btn btn-sm btn-secondary" href="{% url 'frontend:route_stops_manage' route.id %}">Trasa</a>
+                            </td>
+                        {% endif %}
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="3">Žiadne linky.</td>
+                        <td colspan="{% if user.is_staff or user.is_superuser %}3{% else %}2{% endif %}">Žiadne linky.</td>
                     </tr>
                 {% endfor %}
             </tbody>

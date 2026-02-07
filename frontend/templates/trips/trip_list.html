@@ -19,7 +19,9 @@
                     <th>Zastávka (príchod)</th>
                     <th>Čas odchodu</th>
                     <th>Čas príchodu</th>
-                    <th>Akcie</th>
+                    {% if user.is_staff or user.is_superuser %}
+                        <th>Akcie</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -31,19 +33,17 @@
                         <td>{{ trip.route.end_stop.name }}</td>
                         <td>{{ trip.departure_time }}</td>
                         <td>{{ trip.arrival_time }}</td>
-                        <td>
-                            
-                            {% if user.is_staff or user.is_superuser %}
+                        
+                        {% if user.is_staff or user.is_superuser %}
+                            <td>
                                 <a href="{% url 'frontend:trip_update' trip.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
                                 <a href="{% url 'frontend:trip_delete' trip.pk %}" class="btn btn-sm btn-danger">Zmazať</a>
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
+                            </td>
+                        {% endif %}
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="7">Žiadne spoje.</td>
+                        <td colspan="{% if user.is_staff or user.is_superuser %}7{% else %}6{% endif %}">Žiadne spoje.</td>
                     </tr>
                 {% endfor %}
             </tbody>

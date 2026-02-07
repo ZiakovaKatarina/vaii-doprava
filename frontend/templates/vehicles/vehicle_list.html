@@ -3,9 +3,11 @@
 <div class="card">
     <h2>Zoznam vozidiel</h2>
 
-    <a href="{% url 'frontend:vehicle_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
-        + Pridať vozidlo
-    </a>
+    {% if user.is_staff or user.is_superuser %}
+        <a href="{% url 'frontend:vehicle_create' %}" class="btn btn-primary" style="margin: 1rem 0; display:inline-block;">
+            + Pridať vozidlo
+        </a>
+    {% endif %}
 
     <div class="table-wrapper">
         <table class="table">
@@ -14,23 +16,28 @@
                     <th>ŠPZ</th>
                     <th>Typ</th>
                     <th>Kapacita</th>
-                    <th>Akcie</th>
+                    {% if user.is_staff or user.is_superuser %}
+                        <th>Akcie</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
                 {% for vehicle in vehicles %}
                     <tr>
                         <td>{{ vehicle.registration_number }}</td>
-                        <td>{{ vehicle.get_vehicle_type_display  }}</td>
+                        <td>{{ vehicle.get_vehicle_type_display }}</td>
                         <td>{{ vehicle.capacity }}</td>
-                        <td>
-                            <a href="{% url 'frontend:vehicle_update' vehicle.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
-                            <a href="{% url 'frontend:vehicle_delete' vehicle.pk %}" class="btn btn-sm btn-danger">Zmazať</a>
-                        </td>
+                        
+                        {% if user.is_staff or user.is_superuser %}
+                            <td>
+                                <a href="{% url 'frontend:vehicle_update' vehicle.pk %}" class="btn btn-sm btn-primary">Upraviť</a>
+                                <a href="{% url 'frontend:vehicle_delete' vehicle.pk %}" class="btn btn-sm btn-danger">Zmazať</a>
+                            </td>
+                        {% endif %}
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="4">Žiadne vozidlá.</td>
+                        <td colspan="{% if user.is_staff or user.is_superuser %}4{% else %}3{% endif %}">Žiadne vozidlá.</td>
                     </tr>
                 {% endfor %}
             </tbody>
