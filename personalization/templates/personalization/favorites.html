@@ -2,27 +2,52 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Obľúbené trasy</h2>
-    
-    {% if favourite_routes %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Trasa</th>
-                    <th>Akcie</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for fav in favourite_routes %}
-                    <tr>
-                        <td>{{ fav.startLocation }} → {{ fav.endLocation }}</td>
-                        <td>-</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Nemáte žiadne obľúbené trasy.</p>
-    {% endif %}
+    <div class="card">
+        <h2 style="margin-bottom: 20px;">Obľúbené trasy</h2>
+        
+        {% if favourite_routes %}
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Trasa (kliknite pre vyhľadanie)</th>
+                            <th style="text-align: right;">Akcie</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fav in favourite_routes %}
+                            <tr>
+                                <td>
+                                    {% if fav.start_id and fav.end_id %}
+                                        <a href="{% url 'frontend:search_connections' %}?start_stop={{ fav.start_id }}&end_stop={{ fav.end_id }}" 
+                                           style="font-weight: bold; font-size: 1.1em; display: block; padding: 5px 0;">
+                                            {{ fav.start_name }} → {{ fav.end_name }}
+                                        </a>
+                                    {% else %}
+                                        <span style="color: #999;" title="Zastávka už možno neexistuje">
+                                            {{ fav.start_name }} → {{ fav.end_name }} (neaktívne)
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: right;">
+                                    <form action="{% url 'personalization:delete_favorite' fav.id %}" method="POST" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline" 
+                                                style="color: #dc3545; border-color: #dc3545;"
+                                                onclick="return confirm('Naozaj chcete odstrániť túto trasu z obľúbených?')">
+                                            Odstrániť
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p style="color: #666; font-style: italic;">Zatiaľ nemáte žiadne obľúbené trasy. Vyhľadajte spojenie a kliknite na "Pridať do obľúbených".</p>
+            <a href="{% url 'frontend:search_connections' %}" class="btn btn-primary" style="margin-top: 10px;">Vyhľadať spojenie</a>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

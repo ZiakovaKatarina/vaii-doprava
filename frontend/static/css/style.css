@@ -385,11 +385,10 @@ footer p {
 }
 
 .error-box {
-    color: #b00020;
-    background: #fdecea;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 5px;
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    font-weight: 500;
 }
 
 /* 1. OPRAVA HLAVIČKY A LOGA */

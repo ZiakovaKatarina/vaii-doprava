@@ -4,337 +4,117 @@
 {% block title %}Registrácia{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width:500px;margin-top:50px;">
-  <h2>Registrácia</h2>
-  
-  <form method="post" id="registrationForm" novalidate>
-    {% csrf_token %}
-    
-    <div class="form-group">
-      <label for="{{ form.username.id_for_label }}">Používateľské meno *</label>
-      {{ form.username }}
-      <div class="invalid-feedback"></div>
-      {% if form.username.errors %}
-          {% for error in form.username.errors %}
-              <div class="error-message">{{ error }}</div>
-          {% endfor %}
-      {% endif %}
-      <small class="form-text">Min. 4 znaky, len písmená, čísla a podčiarkovník</small>
-    </div>
+<div class="container" style="max-width: 500px; margin-top: 50px; margin-bottom: 50px;">
+    <div class="card">
+        <h2 style="margin-bottom: 1.5rem; text-align: center;">Vytvoriť účet</h2>
 
-    <div class="form-group">
-      <label for="{{ form.email.id_for_label }}">Email *</label>
-      {{ form.email }}
-      <div class="invalid-feedback"></div>
-      {% if form.email.errors %}
-          {% for error in form.email.errors %}
-              <div class="error-message">{{ error }}</div>
-          {% endfor %}
-      {% endif %}
-    </div>
+        <form method="post" id="registrationForm" novalidate>
+            {% csrf_token %}
+            
+            <!-- Používateľské meno -->
+            <div class="form-row">
+                <label for="{{ form.username.id_for_label }}">Používateľské meno *</label>
+                {{ form.username }}
+                <small class="text-muted">Min. 4 znaky (písmená, čísla, podčiarkovník)</small>
+                {% if form.username.errors %}<div class="error-box">{{ form.username.errors.0 }}</div>{% endif %}
+            </div>
 
-    <div class="form-group">
-      <label for="id_first_name">Meno</label>
-      {{ form.first_name }}
-    </div>
-    <div class="form-group">
-      <label for="id_last_name">Priezvisko</label>
-      {{ form.last_name }}
-    </div>
+            <!-- Email -->
+            <div class="form-row">
+                <label for="{{ form.email.id_for_label }}">Email *</label>
+                {{ form.email }}
+                {% if form.email.errors %}<div class="error-box">{{ form.email.errors.0 }}</div>{% endif %}
+            </div>
 
-    <div class="form-group">
-      <label for="{{ form.password1.id_for_label }}">Heslo *</label>
-      {{ form.password1 }}
-      <div class="invalid-feedback"></div>
-      {% if form.password1.errors %}
-          {% for error in form.password1.errors %}
-              <div class="error-message">{{ error }}</div>
-          {% endfor %}
-      {% endif %}
-      <div class="password-requirements">
-        <small><strong>Heslo musí obsahovať:</strong></small>
-        <ul id="passwordChecklist">
-          <li id="length-check">Min. 8 znakov</li>
-          <li id="uppercase-check">Aspoň jedno veľké písmeno (A-Z)</li>
-          <li id="lowercase-check">Aspoň jedno malé písmeno (a-z)</li>
-          <li id="number-check">Aspoň jedno číslo (0-9)</li>
-          <li id="special-check">Aspoň jeden špeciálny znak (!@#$%...)</li>
-        </ul>
-      </div>
-    </div>
+            <!-- Meno a Priezvisko vedľa seba -->
+            <div style="display: flex; gap: 10px;">
+                <div class="form-row" style="flex: 1;">
+                    <label for="id_first_name">Meno</label>
+                    {{ form.first_name }}
+                </div>
+                <div class="form-row" style="flex: 1;">
+                    <label for="id_last_name">Priezvisko</label>
+                    {{ form.last_name }}
+                </div>
+            </div>
 
-    <div class="form-group">
-      <label for="{{ form.password2.id_for_label }}">Potvrdenie hesla *</label>
-      {{ form.password2 }}
-      <div class="invalid-feedback"></div>
-      {% if form.password2.errors %}
-          {% for error in form.password2.errors %}
-              <div class="error-message">{{ error }}</div>
-          {% endfor %}
-      {% endif %}
-    </div>
+            <!-- Heslo -->
+            <div class="form-row">
+                <label for="{{ form.password1.id_for_label }}">Heslo *</label>
+                {{ form.password1 }}
+                
+                <!-- Požiadavky na heslo (Dynamické) -->
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 0.85rem;">
+                    <b style="display: block; margin-bottom: 5px;">Heslo musí obsahovať:</b>
+                    <ul id="passwordChecklist" style="list-style: none; padding: 0; margin: 0;">
+                        <li id="length-check" style="color: #dc3545;">✗ Aspoň 8 znakov</li>
+                        <li id="uppercase-check" style="color: #dc3545;">✗ Veľké písmeno</li>
+                        <li id="number-check" style="color: #dc3545;">✗ Číslo</li>
+                        <li id="special-check" style="color: #dc3545;">✗ Špeciálny znak</li>
+                    </ul>
+                </div>
+                {% if form.password1.errors %}<div class="error-box">{{ form.password1.errors.0 }}</div>{% endif %}
+            </div>
 
-    <button type="submit" class="btn btn-primary" style="width: 100%;">
-      Registrovať sa
-    </button>
+            <!-- Potvrdenie hesla -->
+            <div class="form-row">
+                <label for="{{ form.password2.id_for_label }}">Zopakujte heslo *</label>
+                {{ form.password2 }}
+                {% if form.password2.errors %}<div class="error-box">{{ form.password2.errors.0 }}</div>{% endif %}
+            </div>
 
-    <div style="text-align: center; margin-top: 20px;">
-      <p>Už máte účet? <a href="{% url 'users:login' %}">Prihláste sa</a></p>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 12px;">
+                Zaregistrovať sa
+            </button>
+        </form>
+
+        <p style="margin-top: 25px; text-align: center; border-top: 1px solid #eee; padding-top: 15px;">
+            Už máte účet? <a href="{% url 'users:login' %}">Prihláste sa</a>
+        </p>
     </div>
-  </form>
-  
-  <p style="margin-top:20px;">
-    Už máte účet? <a href="{% url 'users:login' %}">Prihláste sa</a>
-  </p>
 </div>
-
-{% endblock %}
-
-{% block extra_js %}
-<script src="{% static 'js/validation.js' %}"></script>
-{% endblock %}
-
-<style>
-.card {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    padding: 30px;
-}
-
-.card-header {
-    margin-bottom: 30px;
-    text-align: center;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 600;
-}
-
-.form-control {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: #007bff;
-}
-
-.form-control.is-invalid {
-    border-color: #dc3545;
-}
-
-.form-control.is-valid {
-    border-color: #28a745;
-}
-
-.error-message {
-    color: #dc3545;
-    font-size: 12px;
-    margin-top: 5px;
-}
-
-.invalid-feedback {
-    color: #dc3545;
-    font-size: 12px;
-    margin-top: 5px;
-    display: none;
-}
-
-.form-text {
-    display: block;
-    margin-top: 5px;
-    font-size: 12px;
-    color: #6c757d;
-}
-
-.password-requirements {
-    margin-top: 10px;
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: 4px;
-}
-
-.password-requirements ul {
-    margin: 5px 0 0 0;
-    padding-left: 20px;
-}
-
-.password-requirements li {
-    font-size: 12px;
-    margin: 3px 0;
-}
-
-.alert {
-    padding: 12px 20px;
-    margin-bottom: 20px;
-    border-radius: 4px;
-}
-
-.alert-success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.alert-error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
-.form-row {
-    display: flex;
-    gap: 10px;
-}
-
-.btn-primary {
-    background-color: #007bff;
-    color: white;
-    padding: 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.btn-primary:hover {
-    background-color: #0056b3;
-}
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('registrationForm');
-    const password1 = document.getElementById('id_password1');
-    const password2 = document.getElementById('id_password2');
-    const username = document.getElementById('id_username');
-    const email = document.getElementById('id_email');
-    const firstName = document.getElementById('id_first_name');
-    const lastName = document.getElementById('id_last_name');
-
-    // Real-time password validation
-    password1.addEventListener('input', function() {
-        const value = this.value;
-        
-        updateCheck('length-check', value.length >= 8);
-        updateCheck('uppercase-check', /[A-Z]/.test(value));
-        updateCheck('lowercase-check', /[a-z]/.test(value));
-        updateCheck('number-check', /[0-9]/.test(value));
-        updateCheck('special-check', /[!@#$%^&*(),.?":{}|<>]/.test(value));
-    });
-
-    // Password match validation
-    password2.addEventListener('input', function() {
-        if (password1.value && this.value) {
-            if (password1.value === this.value) {
-                this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
-            } else {
-                this.classList.remove('is-valid');
-                this.classList.add('is-invalid');
-            }
+    const pwd = document.getElementById('id_password1');
+    const pwd2 = document.getElementById('id_password2');
+    
+    // Pridanie form-control triedy dynamicky
+    document.querySelectorAll('input').forEach(input => {
+        if(input.type !== 'submit' && input.type !== 'checkbox') {
+            input.classList.add('form-control');
         }
     });
 
     function updateCheck(id, isValid) {
-        const element = document.getElementById(id);
+        const el = document.getElementById(id);
         if (isValid) {
-            element.style.color = '#28a745';
-            element.innerHTML = '✓ ' + element.textContent.replace('✓ ', '').replace('✗ ', '');
+            el.style.color = '#28a745';
+            el.textContent = el.textContent.replace('✗', '✓');
         } else {
-            element.style.color = '#dc3545';
-            element.innerHTML = '✗ ' + element.textContent.replace('✓ ', '').replace('✗ ', '');
+            el.style.color = '#dc3545';
+            el.textContent = el.textContent.replace('✓', '✗');
         }
     }
 
-    // Form validation
-    form.addEventListener('submit', function(e) {
-        let isValid = true;
-        clearAllErrors();
-
-        // Username validation
-        if (username.value.length < 4) {
-            showError(username, 'Používateľské meno musí mať aspoň 4 znaky');
-            isValid = false;
-        } else if (!/^[a-zA-Z0-9_]+$/.test(username.value)) {
-            showError(username, 'Používateľské meno môže obsahovať len písmená, čísla a podčiarkovník');
-            isValid = false;
-        }
-
-        // Email validation
-        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.value)) {
-            showError(email, 'Neplatný formát emailu');
-            isValid = false;
-        }
-
-        // First name validation
-        if (firstName.value.length < 2) {
-            showError(firstName, 'Meno musí mať aspoň 2 znaky');
-            isValid = false;
-        }
-
-        // Last name validation
-        if (lastName.value.length < 2) {
-            showError(lastName, 'Priezvisko musí mať aspoň 2 znaky');
-            isValid = false;
-        }
-
-        // Password validation
-        const pwd = password1.value;
-        if (pwd.length < 8 || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || 
-            !/[0-9]/.test(pwd) || !/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) {
-            showError(password1, 'Heslo nespĺňa všetky požadované kritériá');
-            isValid = false;
-        }
-
-        // Password match
-        if (password1.value !== password2.value) {
-            showError(password2, 'Heslá sa nezhodujú');
-            isValid = false;
-        }
-
-        if (!isValid) {
-            e.preventDefault();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+    pwd.addEventListener('input', function() {
+        const val = this.value;
+        updateCheck('length-check', val.length >= 8);
+        updateCheck('uppercase-check', /[A-Z]/.test(val));
+        updateCheck('number-check', /[0-9]/.test(val));
+        updateCheck('special-check', /[!@#$%^&*(),.?":{}|<>]/.test(val));
     });
 
-    function showError(input, message) {
-        input.classList.add('is-invalid');
-        const feedback = input.nextElementSibling;
-        if (feedback && feedback.classList.contains('invalid-feedback')) {
-            feedback.textContent = message;
-            feedback.style.display = 'block';
+    // Kontrola zhody hesiel
+    pwd2.addEventListener('input', function() {
+        if (this.value === pwd.value && this.value.length > 0) {
+            this.style.borderColor = '#28a745';
+        } else if (this.value !== pwd.value && this.value.length > 0) {
+            this.style.borderColor = '#dc3545';
+        } else {
+            this.style.borderColor = '#ddd';
         }
-    }
-
-    function clearError(input) {
-        input.classList.remove('is-invalid');
-        const feedback = input.nextElementSibling;
-        if (feedback && feedback.classList.contains('invalid-feedback')) {
-            feedback.style.display = 'none';
-        }
-    }
-
-    function clearAllErrors() {
-        document.querySelectorAll('.is-invalid').forEach(el => {
-            el.classList.remove('is-invalid');
-        });
-        document.querySelectorAll('.invalid-feedback').forEach(el => {
-            el.style.display = 'none';
-        });
-    }
+    });
 });
 </script>
+{% endblock %}
