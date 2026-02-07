@@ -1,5 +1,68 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<h2>Hlavná stránka</h2>
+<div class="home-hero card" style="text-align: center; padding: 3rem 2rem;">
+    <h1 style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 1rem;">Vitajte v systéme Verejnej Dopravy</h1>
+    <p style="font-size: 1.2rem; color: var(--muted); max-width: 800px; margin: 0 auto 2rem auto;">
+        Tento portál slúži na efektívnu správu dopravnej infraštruktúry a pohodlné vyhľadávanie spojení v rámci mesta a okolia.
+    </p>
+    
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{% url 'frontend:search_connections' %}" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem;">
+            Vyhľadať spojenie
+        </a>
+
+        {% if not user.is_authenticated %}
+            <a href="{% url 'users:login' %}" class="btn btn-outline" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                Prihlásiť sa
+            </a>
+            <a href="{% url 'users:register' %}" class="btn btn-outline" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                Registrovať sa
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 350px)); gap: 1.5rem; margin-top: 2rem; justify-content: center;">
+    <div class="card" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 2rem 1.5rem;">
+        <h3 style="margin-bottom: 1rem; color: var(--primary-color); font-size: 1.4rem;">
+            📍 Plánovanie trasy 📍
+        </h3>
+        <p style="margin: 0; color: var(--text); line-height: 1.6;">
+            Naša interaktívna mapa vám umožní jednoducho vybrať štart a cieľ vašej cesty kliknutím priamo na zastávky.
+        </p>
+    </div>
+
+    <div class="card" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 2rem 1.5rem;">
+        <h3 style="margin-bottom: 1rem; color: var(--primary-color); font-size: 1.4rem;">
+            🚌 Aktuálne dáta 🚌
+        </h3>
+        <p style="margin: 0; color: var(--text); line-height: 1.6;">
+            V sekcii "Data" nájdete kompletný zoznam všetkých liniek, zastávok a prevádzkovaných vozidiel v našom systéme.
+        </p>
+    </div>
+
+    <div class="card" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 2rem 1.5rem;">
+        <h3 style="margin-bottom: 1rem; color: var(--primary-color); font-size: 1.4rem;">
+            ⭐ Personalizácia ⭐
+        </h3>
+        <p style="margin: 0; color: var(--text); line-height: 1.6;">
+            Po registrácii si môžete ukladať svoje najčastejšie trasy do obľúbených a mať k nim prístup jediným kliknutím.
+        </p>
+    </div>
+</div>
+
+{% if user.is_staff %}
+<div style="display: flex; justify-content: center; margin-top: 2rem;">
+    <div class="card" style="max-width: 1100px; width: 100%; background-color: #e8f4f8; border: 1px solid #b8daff; text-align: center; padding: 2rem;">
+        <h3 style="margin-bottom: 1rem; font-size: 1.4rem;">
+            🛠️ Administrátorský panel 🛠️
+        </h3>
+        <p style="max-width: 800px; margin: 0 auto 1.5rem auto;">
+            Ste prihlásený ako administrátor. Môžete pridávať nové zastávky, upravovať grafikon, spravovať vozový park alebo hromadne importovať dáta z CSV súborov.
+        </p>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

@@ -19,18 +19,18 @@
 
     <header>
         <div class="container">
-            <h1>Verejná Doprava</h1>
+            <h1><a href="{% url 'frontend:home' %}" class="logo-link">Verejná Doprava</a></h1>
+            
             <nav>
-                <a href="{% url 'frontend:search_connections' %}">Vyhľadanie</a>
-                <a href="{% url 'frontend:home' %}">Hľadanie Trasy</a>
+                <a href="{% url 'frontend:search_connections' %}">Vyhľadanie trasy</a>
 
                 <div class="dropdown">
                     <span class="nav-link">Data</span>
                     <div class="dropdown-content">
-                        <a style="color: black;" href="{% url 'frontend:stop_list' %}">Zastávky</a>
-                        <a style="color: black;" href="{% url 'frontend:trip_list' %}">Spoje</a>
-                        <a style="color: black;" href="{% url 'frontend:route_list' %}">Linky</a>
-                        <a style="color: black;" href="{% url 'frontend:vehicle_list' %}">Vozidlá</a>
+                        <a href="{% url 'frontend:stop_list' %}">Zastávky</a>
+                        <a href="{% url 'frontend:trip_list' %}">Spoje</a>
+                        <a href="{% url 'frontend:route_list' %}">Linky</a>
+                        <a href="{% url 'frontend:vehicle_list' %}">Vozidlá</a>
                     </div>
                 </div>
 
@@ -38,11 +38,11 @@
                 <div class="dropdown">
                     <span class="nav-link">Správa</span>
                     <div class="dropdown-content">
-                        <a style="color: black;" href="{% url 'frontend:stop_create' %}">Vytvoriť zastávku</a>
-                        <a style="color: black;" href="{% url 'frontend:trip_create' %}">Vytvoriť spoj</a>
-                        <a style="color: black;" href="{% url 'frontend:route_create' %}">Vytvoriť linku</a>
-                        <a style="color: black;" href="{% url 'frontend:vehicle_create' %}">Vytvoriť vozidlo</a>
-                        <a style="color: black;" href="{% url 'frontend:file_upload' %}">File upload</a>
+                        <a href="{% url 'frontend:stop_create' %}">Vytvoriť zastávku</a>
+                        <a href="{% url 'frontend:trip_create' %}">Vytvoriť spoj</a>
+                        <a href="{% url 'frontend:route_create' %}">Vytvoriť linku</a>
+                        <a href="{% url 'frontend:vehicle_create' %}">Vytvoriť vozidlo</a>
+                        <a href="{% url 'frontend:file_upload' %}">File upload</a>
                     </div>
                 </div>
                 {% endif %}
@@ -51,13 +51,12 @@
                     <div class="dropdown">
                         <span class="nav-link">{{ user.username }}</span>
                         <div class="dropdown-content">
-                            <a style="color: black;" href="{% url 'users:profile' %}">Môj profil</a>
+                            <a href="{% url 'users:profile' %}">Môj profil</a>
                             {% if user.is_staff or user.is_superuser %}
-                                <a style="color: black;" href="{% url 'users:users_list' %}">Správa používateľov</a>
+                                <a href="{% url 'users:users_list' %}">Správa používateľov</a>
                             {% endif %}
-                            <a style="color: black;" href="{% url 'personalization:favorites' %}">Obľúbené trasy</a>
-                            <hr style="margin: 5px 0;">
-                            <a style="color: black;" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Odhlásiť sa</a>
+                            <a href="{% url 'personalization:favorites' %}">Obľúbené trasy</a>
+                            <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Odhlásiť sa</a>
                         </div>
                     </div>
                     <form id="logout-form" action="{% url 'users:logout' %}" method="post" style="display: none;">
