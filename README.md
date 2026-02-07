@@ -1,98 +1,68 @@
-# VAII Doprava - Verejná Doprava
+# Systém pre správu verejnej dopravy
 
-Webová aplikácia pre správu verejnej dopravy s AJAX filtovaním, prihlasovaním a rôznymi rolami.
+Tento projekt je semestrálna práca z predmetu **Vývoj aplikácií pre internet a intranet** na Žilinskej univerzite v Žiline. Ide o komplexnú webovú aplikáciu postavenú na frameworku **Django**, ktorá slúži na správu zastávok, liniek a spojov s pokročilým vyhľadávaním a interaktívnou mapovou vizualizáciou.
 
-## Požiadavky
-- Python 3.13+
-- MySQL/MariaDB 10.4+
-- pip
+## Autor
+- **Meno a priezvisko:** Katarína Žiaková
+- **Študijná skupina:** 5ZYI31
+- **Akademický rok:** 2025/2026
+- **Predmet:** Vývoj aplikácií pre internet a intranet (VAII)
 
-## Inštalácia
+## Kľúčové funkcionality
+- **Kompletný CRUD:** Správa zastávok, dopravných vozidiel, liniek (trás) a konkrétnych spojov.
+- **Interaktívna mapa (Leaflet.js):**
+    - Výber súradníc novej zastávky priamo kliknutím do mapy.
+    - Integrovaný Geocoding pre hľadanie reálnych adries.
+    - Vizualizácia siete zastávok a rýchle nastavenie Štartu/Cieľa kliknutím na marker.
+- **Pokročilé vyhľadávanie spojení:**
+    - Algoritmus vyhľadáva priame spoje medzi zastávkami.
+    - V prípade neexistencie priameho spoja systém automaticky navrhne **prestup** na spoločnej zastávke dvoch rôznych liniek.
+- **Personalizácia:** Možnosť registrácie používateľa a ukladania vyhľadaných trás do zoznamu obľúbených.
+- **Dátový import:** Hromadné nahrávanie a aktualizácia zastávok zo súboru **CSV**.
+- **Administrácia používateľov:** Dynamická AJAX tabuľka s pokročilým filtrovaním, radením, pagináciou a správou oprávnení.
 
-### 1. Klonovanie projektu
-```bash
-git clone https://github.com/USERNAME/vaii-doprava.git
-cd vaii-doprava
+## Technické požiadavky
+- **Python:** 3.13+
+- **Databáza:** MySQL / MariaDB 10.4+
+- **Knižnice:** Django 4.2.27, mysqlclient, PyMySQL, Leaflet.js
+
+## Inštalácia a spustenie
+
+### 1. Príprava databázy
+Vytvorte prázdnu databázu v MySQL (napr. cez phpMyAdmin alebo terminál):
+```sql
+CREATE DATABASE doprava_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-### 2. Inštalácia závislosti
-```bash
+### 2. Klonovanie a inštalácia závislostí
+```Bash
+git clone https://github.com/vash-repo/vaii-doprava.git
+cd vaii-doprava
 pip install -r requirements.txt
 ```
 
-Alebo ručne:
-```bash
-pip install django==4.2.27 mysqlclient pymysql
+### 3. Konfigurácia
+V súbore doprava/settings.py upravte sekciu DATABASES (meno používateľa a heslo), aby zodpovedala vašej lokálnej konfigurácii MySQL.
+### 4. Migrácie a vytvorenie administrátora
+```Bash
+python manage.py migrate
+python manage.py createsuperuser
 ```
 
-### 3. Nastavenie databázu
-Vytvorenie databázy:
-```sql
-CREATE DATABASE doprava_db CHARACTER SET utf8mb4;
+### 5. Spustenie servera
+```Bash
+python manage.py runserver
 ```
+Aplikácia bude dostupná na adrese: http://127.0.0.1:8000/
 
-Upravenie `doprava/settings.py`:
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'doprava_db',
-        'USER': 'root',
-        'PASSWORD': 'vaše_heslo',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    }
-}
-```
+## Vyhlásenie o použití AI
+V súlade s podmienkami semestrálnej práce vyhlasujem, že pri návrhu niektorých častí kódu boli použité nástroje generatívnej umelej inteligencie (ChatGPT):
 
-### 4. Migrácie a superuser
-```bash
-py manage.py makemigrations
-py manage.py migrate
-py manage.py createsuperuser
-```
+- Vyhľadávací algoritmus: Návrh logiky pre hľadanie prestupných bodov.
+- Integrácia mapy: Pomoc s JavaScriptovou logikou.
+- Validácia: Pomoc s JavaScriptovou logikou pre prácu s validáciou na strane servera a na strane klienta.
 
-### 5. Spustenie serveru
-```bash
-py manage.py runserver
-```
-Otvorte http://127.0.0.1:8000/
+Poznámka: Všetky AI vygenerované časti boli následne autorom manuálne upravené, integrované do architektúry projektu a riadne otestované.
 
-## Bezpečnosť
-- CSRF ochrana (`{% csrf_token %}` na všetkých POST)
-- Validácia na serveri + klientovi
-- Autentifikácia + autorizácia (`login_required`, `admin_required`)
-- SQL Injection ochrana (Django ORM)
-- Password hashing (Django default)
-
-## AJAX Volania
-1. **Editovanie v tabuľke** - `frontend/static/js/inline-edit.js`
-   - Dvojklik na bunku → PATCH request
-
-2. **Admin práva používateľov** - `frontend/static/js/users.js`
-   - Toggle checkbox → POST request
-
-3. **Filtrovanie + Paginácia** - `frontend/static/js/users.js`
-   - Hľadanie → GET request (200+ riadkov kódu)
-
-## Roly
-Rola            Práva
-Admin           všetky CRUD, správa používateľov
-Registrovaný    Čítanie, obľúbené trasy
-Anonymný        Iba čítanie verejných dát
-
-## Štruktúra
-```
-vaii-doprava/
-├── users/              # Auth, registrácia, roly
-├── data_management/    # CRUD: Stop, Route, Trip, Vehicle
-├── frontend/           # Verejná časť + AJAX scripty
-├── personalization/    # Obľúbené trasy
-├── doprava/            # Settings, URLs
-├── README.md
-├── requirements.txt
-└── manage.py
-```
-
-## Autori
-Katarína Žiaková - Semestrálna práca VAII 2025
+---
+2025 – Katarína Žiaková – VAII UNIZA
