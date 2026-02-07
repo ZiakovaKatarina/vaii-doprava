@@ -3,11 +3,13 @@
 
 {% block content %}
 <div class="card">
-    <h2>{{ title }}</h2>
+    <h2 style="margin-bottom: 1.5rem;">{{ title }}</h2>
     
-    <!-- Mapa a hľadanie -->
     <div style="margin-bottom: 20px;">
-        <label>📍 Vyberte polohu (kliknite na mapu alebo hľadajte adresu):</label>
+        <div id="search-container"></div>
+        
+        <label id="map-label" style="margin-top: 10px; display: block;">📍 Vyberte polohu (kliknite na mapu alebo hľadajte adresu):</label>
+        
         <div id="stop-map" style="height: 350px; width: 100%; border-radius: 8px; border: 1px solid #ccc; z-index: 1; margin-top:10px;"></div>
         <small style="color: #666;">Červený marker určuje súradnice novej zastávky.</small>
     </div>
@@ -56,7 +58,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const lonInput = document.querySelector('input[name="longitude"]');
     const nameInput = document.querySelector('input[name="name"]');
     
-    // --- 1. Inicializácia súradníc (Fix pre prázdne polia) ---
     let initialLat = parseFloat(latInput.value);
     let initialLon = parseFloat(lonInput.value);
     
@@ -72,7 +73,6 @@ document.addEventListener('DOMContentLoaded', function() {
         attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // Hlavný červený marker
     const mainMarker = L.marker([initialLat, initialLon], {
         draggable: true,
         zIndexOffset: 1000,
@@ -106,7 +106,8 @@ document.addEventListener('DOMContentLoaded', function() {
     internalSearch.placeholder = '🔍 Skočiť na existujúcu zastávku...';
     internalSearch.className = 'form-input';
     internalSearch.style.marginBottom = '10px';
-    document.getElementById('stop-map').before(internalSearch);
+
+    document.getElementById('search-container').appendChild(internalSearch);
 
     internalSearch.addEventListener('input', function(e) {
         const query = e.target.value.toLowerCase().trim();
@@ -120,7 +121,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- 3. Hľadanie reálnej adresy ---
     L.Control.geocoder({
         placeholder: "🌍 Hľadať ulicu/adresu...",
         defaultMarkGeocode: false
@@ -131,7 +131,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateInputs(center.lat, center.lng);
     }).addTo(map);
 
-    // --- 4. Eventy pre mapu ---
     map.on('click', e => {
         mainMarker.setLatLng(e.latlng);
         updateInputs(e.latlng.lat, e.latlng.lng);

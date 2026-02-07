@@ -281,6 +281,7 @@ def stops_api(request):
         'stops': stops,
         'page': page_obj.number,
         'pages': paginator.num_pages,
+        'count': paginator.count,
     })
 
 def trip_list(request):
