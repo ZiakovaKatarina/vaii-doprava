@@ -405,7 +405,6 @@ footer p {
     font-weight: 500;
 }
 
-/* 1. OPRAVA HLAVIČKY A LOGA */
 header .container {
     display: flex;
     justify-content: space-between;

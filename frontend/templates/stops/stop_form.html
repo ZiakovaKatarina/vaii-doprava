@@ -54,9 +54,39 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('stop-form');
+    const nameInput = document.querySelector('input[name="name"]');
     const latInput = document.querySelector('input[name="latitude"]');
     const lonInput = document.querySelector('input[name="longitude"]');
-    const nameInput = document.querySelector('input[name="name"]');
+
+    form.addEventListener('submit', function(e) {
+        let valid = true;
+
+        if (!nameInput.value.trim()) {
+            showError(nameInput, 'Názov je povinný.');
+            valid = false;
+        }
+
+        const lat = parseFloat(latInput.value);
+        if (isNaN(lat) || lat < -90 || lat > 90) {
+            showError(latInput, 'Zemepisná šírka musí byť medzi -90 a 90.');
+            valid = false;
+        }
+
+        const lon = parseFloat(lonInput.value);
+        if (isNaN(lon) || lon < -180 || lon > 180) {
+            showError(lonInput, 'Zemepisná dĺžka musí byť medzi -180 a 180.');
+            valid = false;
+        }
+
+        if (!valid) e.preventDefault();
+    });
+
+    function showError(input, msg) {
+        const errorBox = input.parentElement.querySelector('.js-error-box');
+        errorBox.textContent = msg;
+        errorBox.style.display = 'block';
+    }
     
     let initialLat = parseFloat(latInput.value);
     let initialLon = parseFloat(lonInput.value);
@@ -91,7 +121,6 @@ document.addEventListener('DOMContentLoaded', function() {
         lonInput.value = lon.toFixed(6);
     }
 
-    // --- 2. Hľadanie existujúcich zastávok ---
     const stopsData = JSON.parse(document.getElementById('stops-data').textContent);
     const markerMap = {};
     stopsData.forEach(s => {

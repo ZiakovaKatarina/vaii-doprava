@@ -28,10 +28,10 @@
             window.loadStops();
           }
         } else {
-          alert('❌ ' + (data.error || 'Zastávku nie je možné zmazať.'));
+          alert(' ' + (data.error || 'Zastávku nie je možné zmazať.'));
         }
       } catch (err) {
-        alert('❌ Systémová chyba pri komunikácii so serverom.');
+        alert('Systémová chyba pri komunikácii so serverom.');
       }
     }
   });

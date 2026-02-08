@@ -144,7 +144,6 @@ def stop_create(request):
         if form.is_valid():
             form.save()
             
-            # KONTROLA: Ak je to AJAX, pošli JSON. Ak nie, urob redirect.
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'ok': True, 'redirect': reverse('frontend:stop_list')})
             
@@ -205,15 +204,18 @@ def stop_update(request, pk):
     })
 
 @admin_required
-@require_http_methods(["DELETE", "POST"])
+@require_http_methods(["GET", "DELETE", "POST"])
 def stop_delete(request, pk):
     try:
         stop = get_object_or_404(Stop, pk=pk)
-        stop.delete()
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'ok': True})
-        messages.success(request, "Zastávka bola úspešne zmazaná.")
-        return redirect('frontend:stop_list')
+        
+        if request.method in ["POST", "DELETE"]:
+            stop.delete()
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'ok': True})
+            messages.success(request, "Zastávka bola úspešne zmazaná.")
+            return redirect('frontend:stop_list')
+            
     except ProtectedError:
         error_msg = "Túto zastávku nie je možné zmazať, pretože je súčasťou jednej alebo viacerých trás (liniek). Najskôr ju odstráňte z trasy."
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -221,7 +223,11 @@ def stop_delete(request, pk):
         messages.error(request, error_msg)
         return redirect('frontend:stop_list')
     except Stop.DoesNotExist:
-        return JsonResponse({'ok': False, 'error': 'Zastávka neexistuje'}, status=404)
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'ok': False, 'error': 'Zastávka neexistuje'}, status=404)
+        return redirect('frontend:stop_list')
+
+    return render(request, 'stops/stop_confirm_delete.html', {'stop': stop})
 
 @require_http_methods(['PATCH'])
 @login_required
@@ -449,9 +455,17 @@ def vehicle_update(request, pk):
 @admin_required
 def vehicle_delete(request, pk):
     vehicle = get_object_or_404(Vehicle, pk=pk)
+    
     if request.method == "POST":
-        vehicle.delete()
-        return redirect('frontend:vehicle_list')
+        try:
+            vehicle.delete()
+            messages.success(request, "Vozidlo bolo úspešne zmazané.")
+            return redirect('frontend:vehicle_list')
+            
+        except ProtectedError:
+            messages.error(request, "Vozidlo nie je možné zmazať, pretože je priradené k existujúcim spojom. Najskôr ho musíte odstrániť z týchto spojov.")
+            return redirect('frontend:vehicle_list')
+            
     return render(request, 'vehicles/vehicle_confirm_delete.html', {'vehicle': vehicle})
 
 from django.db.models import Prefetch
