@@ -573,3 +573,19 @@ def _reorder_route_stops(route):
             if rs.order != index:
                 rs.order = index
                 rs.save(update_fields=['order'])
+
+def route_detail(request, pk):
+    """Verejné zobrazenie detailu linky so zoznamom zastávok"""
+    route = get_object_or_404(Route, pk=pk)
+    
+    route_stops = RouteStop.objects.filter(
+        route=route
+    ).select_related('stop').order_by('order')
+    
+    context = {
+        'route': route,
+        'route_stops': route_stops,
+        'is_admin': request.user.is_staff or request.user.is_superuser,
+    }
+    
+    return render(request, 'routes/route_detail.html', context)

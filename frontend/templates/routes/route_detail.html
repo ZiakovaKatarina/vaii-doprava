@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Detail linky {{ route.name }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 900px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0;">Linka {{ route.name }}</h2>
+        
+        {% if is_admin %}
+            <a href="{% url 'frontend:route_stops_manage' route.id %}" class="btn btn-primary">
+                ⚙️ Spravovať zastávky
+            </a>
+        {% endif %}
+    </div>
+
+    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+        <p style="margin: 0; font-size: 1.1rem;">
+            <strong>Trasa:</strong> 
+            {{ route.start_stop.name }} 
+            <span style="color: var(--primary-color); font-weight: bold;">→</span> 
+            {{ route.end_stop.name }}
+        </p>
+    </div>
+
+    {% if route_stops %}
+        <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Zastávky na trase ({{ route_stops.count }})</h3>
+        
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Poradie</th>
+                        <th>Názov zastávky</th>
+                        <th>Súradnice</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rs in route_stops %}
+                        <tr>
+                            <td style="text-align: center; font-weight: bold;">{{ rs.order }}.</td>
+                            <td>{{ rs.stop.name }}</td>
+                            <td style="font-family: monospace; color: #666;">
+                                {{ rs.stop.latitude|floatformat:6 }}, {{ rs.stop.longitude|floatformat:6 }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem; background: #f8f9fa; border-radius: 8px; color: #666;">
+            <p style="margin: 0; font-size: 1.1rem;">
+                Pre túto linku nie sú definované žiadne medzizastávky.
+            </p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                Trasa vedie priamo z <strong>{{ route.start_stop.name }}</strong> do <strong>{{ route.end_stop.name }}</strong>.
+            </p>
+        </div>
+    {% endif %}
+    
+    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+        <a href="{% url 'frontend:route_list' %}" class="btn btn-outline">
+            ← Späť na zoznam liniek
+        </a>
+        
+        {% if user.is_authenticated %}
+            <a href="{% url 'frontend:search_connections' %}?start_stop={{ route.start_stop.id }}&end_stop={{ route.end_stop.id }}" 
+               class="btn btn-primary">
+                🔍 Vyhľadať spojenie
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

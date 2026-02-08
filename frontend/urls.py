@@ -29,6 +29,7 @@ urlpatterns = [
     ),
     path("routes/<int:route_id>/stops/renumber/", views.route_stops_renumber, name="route_stops_renumber"),
     path("routes/<int:route_id>/stops/<int:rs_id>/delete/", views.route_stop_delete, name="route_stop_delete"),
+    path('routes/<int:pk>/detail/', views.route_detail, name='route_detail'),
 
     path('vehicles/', views.vehicle_list, name='vehicle_list'),
     path('vehicles/create/', views.vehicle_create, name='vehicle_create'),
