@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block content %}
 <div class="card">
     <h2>{{ title }}</h2>
@@ -11,34 +12,43 @@
                 <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                 {{ field }}
                 
-                <div class="alert alert-error" style="display:none; color:red; font-size:0.9rem;"></div>
+                <div class="alert alert-error js-validation-error" style="display:none; color:red; font-size:0.9rem;">
+                    Názov musí mať aspoň 2 znaky a nesmie obsahovať špeciálne znaky.
+                </div>
                 
                 {% if field.errors %}
-                    <div class="alert alert-error" style="color:red; font-size:0.9rem; display:block;">{{ field.errors.0 }}</div>
+                    <div class="alert alert-error" style="color:red; font-size:0.9rem; display:block;">
+                        {{ field.errors.0 }}
+                    </div>
                 {% endif %}
             </div>
         {% endfor %}
 
-        <button class="btn btn-primary" type="submit">Uložiť</button>
-        <a class="btn btn-outline" href="{% url 'frontend:route_list' %}">Späť na zoznam</a>
+        <div class="form-actions" style="margin-top: 2rem; display: flex; gap: 1rem;">
+            <button class="btn btn-primary" type="submit" style="min-width: 150px;">Uložiť</button>
+            <a class="btn btn-outline" href="{% url 'frontend:route_list' %}" style="min-width: 150px; text-align: center;">Späť na zoznam</a>
+        </div>
     </form>
 </div>
 
 <script>
+    // Validácia názvu linky
     const regexRoute = /^[a-zA-Z0-9áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ\s-]{2,}$/;
-    
     const nameInput = document.querySelector('input[name="name"]');
-    nameInput && nameInput.addEventListener('input', function() {
-        const name = this.value.trim();
-        const errorDiv = this.parentElement.querySelector('.alert.alert-error');
-        
-        if (name.length > 0 && !regexRoute.test(name)) {
-            this.classList.add('error');
-            if (errorDiv) errorDiv.style.display = 'block';
-        } else {
-            this.classList.remove('error');
-            if (errorDiv) errorDiv.style.display = 'none';
-        }
-    });
+    
+    if (nameInput) {
+        nameInput.addEventListener('input', function() {
+            const name = this.value.trim();
+            const errorDiv = this.parentElement.querySelector('.js-validation-error');
+            
+            if (name.length > 0 && !regexRoute.test(name)) {
+                this.style.borderColor = 'red';
+                if (errorDiv) errorDiv.style.display = 'block';
+            } else {
+                this.style.borderColor = '';
+                if (errorDiv) errorDiv.style.display = 'none';
+            }
+        });
+    }
 </script>
 {% endblock %}

@@ -369,14 +369,47 @@ def route_create(request):
 @admin_required
 def route_update(request, pk):
     route = get_object_or_404(Route, pk=pk)
+    
     if request.method == "POST":
         form = RouteForm(request.POST, instance=route)
         if form.is_valid():
-            form.save()
+            old_start = route.start_stop
+            old_end = route.end_stop
+            
+            route = form.save(commit=False)
+            route.full_clean()
+            route.save()
+            
+            route_stops = RouteStop.objects.filter(route=route).order_by('order')
+            
+            if route_stops.exists():
+                first_rs = route_stops.first()
+                last_rs = route_stops.last()
+                
+                if first_rs.stop != route.start_stop:
+                    first_rs.stop = route.start_stop
+                    first_rs.save()
+                    messages.info(request, f"Prvá zastávka v trase bola zmenená na {route.start_stop}.")
+
+                if last_rs.stop != route.end_stop:
+                    last_rs.stop = route.end_stop
+                    last_rs.save()
+                    messages.info(request, f"Posledná zastávka v trase bola zmenená na {route.end_stop}.")
+            
+            messages.success(request, f"Linka {route.name} bola aktualizovaná.")
             return redirect('frontend:route_list')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = RouteForm(instance=route)
-    return render(request, 'routes/route_form.html', {'form': form, 'title': 'Upraviť trasu'})
+    
+    return render(request, 'routes/route_form.html', {
+        'form': form,
+        'title': 'Upraviť linku',
+        'route': route
+    })
 
 @admin_required
 def route_delete(request, pk):
@@ -505,39 +538,38 @@ def search_connections(request):
 @admin_required
 def route_stops_manage(request, route_id):
     route = get_object_or_404(Route, pk=route_id)
-    route_stops = RouteStop.objects.filter(route=route).select_related("stop").order_by("order")
-    stops = Stop.objects.all().order_by("name")
+    stops = Stop.objects.all().order_by('name')
+    route_stops = RouteStop.objects.filter(route=route).order_by('order')
 
     if request.method == "POST":
-        stop_id = request.POST.get("stop")
-        order = request.POST.get("order")
-
-        if not stop_id:
-            messages.error(request, "Vyber zastávku.")
-            return redirect("frontend:route_stops_manage", route_id=route.id)
-
-        with transaction.atomic():
-            if not order:
-                max_order = RouteStop.objects.filter(route=route).aggregate(Max("order"))["order__max"] or 0
-                new_order = max_order + 1
-            else:
-                try:
-                    new_order = int(order)
-                    RouteStop.objects.filter(route=route, order__gte=new_order).update(order=F('order') + 1)
-                except ValueError:
-                    messages.error(request, "Poradie musí byť číslo.")
-                    return redirect("frontend:route_stops_manage", route_id=route.id)
-
-            RouteStop.objects.create(route=route, stop_id=stop_id, order=new_order)
-            _reorder_route_stops(route)
+        stop_id = request.POST.get('stop')
+        order_input = request.POST.get('order', '').strip()
+        
+        if stop_id:
+            stop = get_object_or_404(Stop, pk=stop_id)
             
-        messages.success(request, "Zastávka pridaná do trasy.")
-        return redirect("frontend:route_stops_manage", route_id=route.id)
+            if order_input:
+                order = int(order_input)
+                existing = RouteStop.objects.filter(route=route, order__gte=order)
+                if existing.exists():
+                    for rs in existing.order_by('-order'):
+                        rs.order += 1
+                        rs.save(update_fields=['order'])
+            else:
+                max_order = RouteStop.objects.filter(route=route).aggregate(Max('order'))['order__max']
+                order = (max_order or 0) + 1
+            
+            RouteStop.objects.create(route=route, stop=stop, order=order)
+            
+            _sync_route_endpoints(route)
+            
+            messages.success(request, f"Zastávka {stop.name} bola pridaná na pozíciu {order}.")
+            return redirect('frontend:route_stops_manage', route_id=route.id)
 
-    return render(request, "routes/route_stops_manage.html", {
-        "route": route,
-        "route_stops": route_stops,
-        "stops": stops,
+    return render(request, 'routes/route_stops_manage.html', {
+        'route': route,
+        'stops': stops,
+        'route_stops': route_stops,
     })
 
 @admin_required
@@ -558,12 +590,14 @@ def route_stops_renumber(request, route_id):
 def route_stop_delete(request, route_id, rs_id):
     route = get_object_or_404(Route, pk=route_id)
     rs = get_object_or_404(RouteStop, pk=rs_id, route=route)
-    rs.delete()
     
+    rs.delete()
     _reorder_route_stops(route)
     
-    messages.success(request, "Zastávka odstránená z trasy.")
-    return redirect("frontend:route_stops_manage", route_id=route.id)
+    _sync_route_endpoints(route)
+    
+    messages.success(request, "Zastávka bola odstránená a koncové body linky aktualizované.")
+    return redirect('frontend:route_stops_manage', route_id=route.id)
 
 def _reorder_route_stops(route):
     """Pridelí poradie 1, 2, 3... všetkým zastávkam linky."""
@@ -573,6 +607,19 @@ def _reorder_route_stops(route):
             if rs.order != index:
                 rs.order = index
                 rs.save(update_fields=['order'])
+
+def _sync_route_endpoints(route):
+    """
+    Automaticky nastaví start_stop a end_stop linky 
+    podľa prvej a poslednej zastávky v RouteStop.
+    """
+    first_stop = RouteStop.objects.filter(route=route).order_by('order').first()
+    last_stop = RouteStop.objects.filter(route=route).order_by('order').last()
+
+    if first_stop and last_stop:
+        route.start_stop = first_stop.stop
+        route.end_stop = last_stop.stop
+        route.save(update_fields=['start_stop', 'end_stop'])
 
 def route_detail(request, pk):
     """Verejné zobrazenie detailu linky so zoznamom zastávok"""

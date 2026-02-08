@@ -68,6 +68,14 @@ class RouteForm(forms.ModelForm):
         
         return name
 
+    def clean(self):
+        """Špecifická validácia pre celý formulár"""
+        cleaned_data = super().clean()
+        start = cleaned_data.get('start_stop')
+        end = cleaned_data.get('end_stop')
+        
+        return cleaned_data
+
 class TripForm(forms.ModelForm):
     class Meta:
         model = Trip

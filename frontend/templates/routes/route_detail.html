@@ -6,12 +6,6 @@
 <div class="card" style="max-width: 900px; margin: 0 auto;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
         <h2 style="margin: 0;">Linka {{ route.name }}</h2>
-        
-        {% if is_admin %}
-            <a href="{% url 'frontend:route_stops_manage' route.id %}" class="btn btn-primary">
-                ⚙️ Spravovať zastávky
-            </a>
-        {% endif %}
     </div>
 
     <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
@@ -63,13 +57,6 @@
         <a href="{% url 'frontend:route_list' %}" class="btn btn-outline">
             ← Späť na zoznam liniek
         </a>
-        
-        {% if user.is_authenticated %}
-            <a href="{% url 'frontend:search_connections' %}?start_stop={{ route.start_stop.id }}&end_stop={{ route.end_stop.id }}" 
-               class="btn btn-primary">
-                🔍 Vyhľadať spojenie
-            </a>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
