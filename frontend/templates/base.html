@@ -80,7 +80,7 @@
         {% endif %}
     </div>
 
-    <main class="container">
+    <main class="container" style="margin-bottom: 60px;">
         {% block content %}
         {% endblock %}
     </main>
@@ -94,28 +94,30 @@
 
     <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const dropdown = document.getElementById('admin-dropdown');
-    const toggle = document.getElementById('admin-toggle');
-    if (!dropdown || !toggle) return;
+    const dropdowns = document.querySelectorAll('.dropdown');
 
-    function toggleDropdown() {
-        const isActive = dropdown.classList.toggle('active');
-        dropdown.classList.toggle('open', isActive);
-        toggle.setAttribute('aria-expanded', isActive ? 'true' : 'false');
-    }
-    toggle.addEventListener('click', function(e){ toggleDropdown(); });
-    document.addEventListener('click', function(e){
-        if (!dropdown.contains(e.target)) {
-            dropdown.classList.remove('active', 'open');
-            toggle.setAttribute('aria-expanded', 'false');
+    dropdowns.forEach(dropdown => {
+        const trigger = dropdown.querySelector('.nav-link');
+        
+        if (trigger) {
+            trigger.addEventListener('click', function(e) {
+                if (window.innerWidth < 992) {
+                    dropdowns.forEach(other => {
+                        if (other !== dropdown) {
+                            other.classList.remove('active');
+                        }
+                    });
+                    dropdown.classList.toggle('active');
+                }
+            });
         }
     });
-    toggle.addEventListener('keydown', function(e){
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
-        else if (e.key === 'Escape') {
-            dropdown.classList.remove('active','open');
-            toggle.setAttribute('aria-expanded','false');
-            toggle.focus();
+
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth < 992) {
+            if (!e.target.closest('.dropdown')) {
+                dropdowns.forEach(d => d.classList.remove('active'));
+            }
         }
     });
 });

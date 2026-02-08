@@ -27,9 +27,9 @@
             </div>
         {% endfor %}
 
-        <div style="margin-top: 20px;">
-            <button class="btn btn-primary" type="submit">Uložiť zastávku</button>
-            <a class="btn btn-outline" href="{% url 'frontend:stop_list' %}">Späť</a>
+        <div style="margin-top: 20px; display: flex; gap: 10px; max-width: 400px;">
+            <button class="btn btn-primary" type="submit" style="flex: 1;">Uložiť zastávku</button>
+            <a class="btn btn-outline" href="{% url 'frontend:stop_list' %}" style="flex: 1; text-align: center;">Späť</a>
         </div>
     </form>
 </div>

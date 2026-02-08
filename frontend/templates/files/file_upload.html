@@ -2,23 +2,27 @@
 
 {% block content %}
 
-<div class="card">
+<div class="card" style="max-width: 800px; margin: 0 auto;">
     
-    <h2 style="padding-bottom: 10px;">Import dát do systému</h2>
+    <h2 style="padding-bottom: 10px; border-bottom: 1px solid #eee; margin-bottom: 20px;">
+        Centrum pre import dát
+    </h2>
     
-    <div style="display: flex; gap: 1rem; justify-content: center;">
-        <a href="{% url 'frontend:csv_upload' %}" class="btn btn-primary" style="width: auto; flex-grow: 1; text-decoration: none; text-align: center; max-width: 300px;">
-            📁 Importovať zastávky z CSV
-        </a>
-    </div>
+    <p style="margin-bottom: 20px; color: #666;">
+        Vyberte typ údajov, ktoré chcete hromadne nahrať do systému.
+    </p>
     
-    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
-        <h3 style="margin-top: 0;">Ako importovať data?</h3>
-        <p>Pomocou CSV importu môžete hromadne pridať zastávky do systému.</p>
-        <p><strong>Formát CSV súboru:</strong></p>
-        <pre style="background: white; padding: 10px; border-radius: 3px;">nazov,latitude,longitude
-Zilina-Mesto,49.223,18.740
-Uniza,49.202,18.761</pre>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; text-align: center; transition: transform 0.2s;">
+            <div style="font-size: 2rem; margin-bottom: 10px;">🚏</div>
+            <h3 style="margin-bottom: 10px;">Zastávky</h3>
+            <p style="font-size: 0.9rem; color: #777; margin-bottom: 15px;">
+                Import nových zastávok zo súboru CSV.
+            </p>
+            <a href="{% url 'frontend:csv_upload' %}" class="btn btn-primary" style="width: 100%;">
+                Prejsť na import
+            </a>
+        </div>
     </div>
         
 </div>
